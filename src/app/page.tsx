@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { Wod, Level, Location, Equipment } from '@/types/wod';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
+import type { Wod, Level, Location, Equipment, SavedWod } from '@/types/wod';
 import { generateWod } from '@/lib/gemini';
 import Spinner from '@/components/Spinner';
 import ErrorDisplay from '@/components/ErrorDisplay';
@@ -19,7 +20,7 @@ const DiceIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function Home() {
   const [wod, setWod] = useState<Wod | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState<string>('');
 
@@ -29,53 +30,57 @@ export default function Home() {
   const [equipment, setEquipment] = useState<Equipment>('Completo');
   const [level, setLevel] = useState<Level>('Intermedio');
   const [injury, setInjury] = useState<string>('');
+  const [justSaved, setJustSaved] = useState<boolean>(false);
 
-  const getTodaysDateString = useMemo(() => () => new Date().toDateString(), []);
-
-  const fetchAndSetWod = useCallback(async (params: { location: Location; equipment: Equipment; level: Level; injury: string }, isDailyWod: boolean = false) => {
+  const fetchAndSetWod = useCallback(async (params: { location: Location; equipment: Equipment; level: Level; injury: string }) => {
     setIsLoading(true);
     setError(null);
     setWod(null);
     try {
       const newWod = await generateWod(params);
       setWod(newWod);
-      if (isDailyWod) {
-        localStorage.setItem('dailyWod', JSON.stringify({
-          date: getTodaysDateString(),
-          wod: newWod
-        }));
-      }
+      localStorage.setItem('lastWod', JSON.stringify(newWod));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido al generar el WOD.');
     } finally {
       setIsLoading(false);
     }
-  }, [getTodaysDateString]);
+  }, []);
 
   useEffect(() => {
-    const today = getTodaysDateString();
     setCurrentDate(new Intl.DateTimeFormat('es-ES', { dateStyle: 'full' }).format(new Date()));
 
     try {
-      const storedData = localStorage.getItem('dailyWod');
-      if (storedData) {
-        const { date, wod: storedWod } = JSON.parse(storedData);
-        if (date === today) {
-          setWod(storedWod);
-          setIsLoading(false);
-          return;
-        }
+      const stored = localStorage.getItem('lastWod');
+      if (stored) {
+        setWod(JSON.parse(stored));
       }
     } catch (e) {
       console.error("Failed to parse WOD from localStorage", e);
-      localStorage.removeItem('dailyWod');
+      localStorage.removeItem('lastWod');
     }
-
-    fetchAndSetWod({ location: 'Box', equipment: 'Completo', level: 'Intermedio', injury: '' }, true);
-  }, [fetchAndSetWod, getTodaysDateString]);
+  }, []);
 
   const handleGenerateNewWod = () => {
-    fetchAndSetWod({ location, equipment, level, injury }, false);
+    fetchAndSetWod({ location, equipment, level, injury });
+  };
+
+  const handleSaveWod = () => {
+    if (!wod) return;
+    const saved: SavedWod = {
+      id: crypto.randomUUID(),
+      savedAt: new Date().toISOString(),
+      wod,
+    };
+    try {
+      const existing: SavedWod[] = JSON.parse(localStorage.getItem('savedWods') || '[]');
+      existing.unshift(saved);
+      localStorage.setItem('savedWods', JSON.stringify(existing));
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 2000);
+    } catch {
+      console.error('Failed to save WOD to localStorage');
+    }
   };
 
   const renderContent = () => {
@@ -91,9 +96,28 @@ export default function Home() {
       return <ErrorDisplay message={error} />;
     }
     if (wod) {
-      return <WodDisplay wod={wod} />;
+      return (
+        <>
+          <WodDisplay wod={wod} />
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={handleSaveWod}
+              disabled={justSaved}
+              className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-colors duration-200 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900 disabled:opacity-60"
+            >
+              {justSaved ? 'Guardado!' : 'Guardar WOD'}
+            </button>
+          </div>
+        </>
+      );
     }
-    return null;
+    return (
+      <div className="text-center py-16">
+        <DiceIcon className="h-12 w-12 mx-auto text-neutral-300 dark:text-neutral-600 mb-4" />
+        <h3 className="text-lg font-medium text-neutral-500 dark:text-neutral-400 mb-2">No hay WOD todav&iacute;a</h3>
+        <p className="text-sm text-neutral-400 dark:text-neutral-500">Haz clic en &ldquo;Generar WOD&rdquo; para crear tu entrenamiento del d&iacute;a.</p>
+      </div>
+    );
   };
 
   return (
@@ -105,7 +129,10 @@ export default function Home() {
                     <h1 className="text-3xl md:text-4xl font-semibold text-neutral-900 dark:text-neutral-100">WOD del D&iacute;a</h1>
                     <p className="text-neutral-500 dark:text-neutral-400 text-base mt-1">{currentDate}</p>
                 </div>
-                <div className="flex items-center space-x-2 flex-shrink-0">
+                <div className="flex items-center space-x-3 flex-shrink-0">
+                    <Link href="/historia" className="text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
+                      Historia
+                    </Link>
                     <ThemeToggle />
                 </div>
             </div>
@@ -130,7 +157,7 @@ export default function Home() {
                       className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-400 dark:focus:ring-offset-neutral-900"
                   >
                       <DiceIcon className="h-4 w-4" />
-                      Generar Nuevo
+                      {wod ? 'Generar Nuevo' : 'Generar WOD'}
                   </button>
               )}
             </div>

@@ -27,3 +27,9 @@ export interface GenerateWodParams {
   level: Level;
   injury?: string;
 }
+
+export interface SavedWod {
+  id: string;
+  savedAt: string;
+  wod: Wod;
+}
