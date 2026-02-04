@@ -1,65 +1,166 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { Wod, Level, Location, Equipment } from '@/types/wod';
+import { generateWod } from '@/lib/gemini';
+import Spinner from '@/components/Spinner';
+import ErrorDisplay from '@/components/ErrorDisplay';
+import WodDisplay from '@/components/WodDisplay';
+import ThemeToggle from '@/components/ThemeToggle';
+import WodControls from '@/components/WodControls';
+
+const FilterIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+);
+
+const DiceIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M8 8h.01"/><path d="M16 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
+);
 
 export default function Home() {
+  const [wod, setWod] = useState<Wod | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentDate, setCurrentDate] = useState<string>('');
+
+  // WOD Customization State
+  const [isCustomizing, setIsCustomizing] = useState<boolean>(false);
+  const [location, setLocation] = useState<Location>('Box');
+  const [equipment, setEquipment] = useState<Equipment>('Completo');
+  const [level, setLevel] = useState<Level>('Intermedio');
+  const [injury, setInjury] = useState<string>('');
+
+  const getTodaysDateString = useMemo(() => () => new Date().toDateString(), []);
+
+  const fetchAndSetWod = useCallback(async (params: { location: Location; equipment: Equipment; level: Level; injury: string }, isDailyWod: boolean = false) => {
+    setIsLoading(true);
+    setError(null);
+    setWod(null);
+    try {
+      const newWod = await generateWod(params);
+      setWod(newWod);
+      if (isDailyWod) {
+        localStorage.setItem('dailyWod', JSON.stringify({
+          date: getTodaysDateString(),
+          wod: newWod
+        }));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido al generar el WOD.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [getTodaysDateString]);
+
+  useEffect(() => {
+    const today = getTodaysDateString();
+    setCurrentDate(new Intl.DateTimeFormat('es-ES', { dateStyle: 'full' }).format(new Date()));
+
+    try {
+      const storedData = localStorage.getItem('dailyWod');
+      if (storedData) {
+        const { date, wod: storedWod } = JSON.parse(storedData);
+        if (date === today) {
+          setWod(storedWod);
+          setIsLoading(false);
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse WOD from localStorage", e);
+      localStorage.removeItem('dailyWod');
+    }
+
+    fetchAndSetWod({ location: 'Box', equipment: 'Completo', level: 'Intermedio', injury: '' }, true);
+  }, [fetchAndSetWod, getTodaysDateString]);
+
+  const handleGenerateNewWod = () => {
+    fetchAndSetWod({ location, equipment, level, injury }, false);
+  };
+
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="text-center">
+            <h3 className="text-lg text-neutral-500 dark:text-neutral-400 mb-4">Personalizando tu infierno diario...</h3>
+            <Spinner />
+        </div>
+      );
+    }
+    if (error) {
+      return <ErrorDisplay message={error} />;
+    }
+    if (wod) {
+      return <WodDisplay wod={wod} />;
+    }
+    return null;
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+    <div className="min-h-screen flex flex-col relative">
+        <header className="py-8">
+          <div className="container mx-auto px-4 max-w-4xl">
+            <div className="flex justify-between items-start md:items-center">
+                <div className="text-left">
+                    <h1 className="text-3xl md:text-4xl font-semibold text-neutral-900 dark:text-neutral-100">WOD del D&iacute;a</h1>
+                    <p className="text-neutral-500 dark:text-neutral-400 text-base mt-1">{currentDate}</p>
+                </div>
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                    <ThemeToggle />
+                </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="container mx-auto px-4 py-8 max-w-4xl flex-grow">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+            <h2 className="text-xl font-semibold text-neutral-800 dark:text-neutral-200">Tu Entrenamiento</h2>
+            <div className="flex items-center gap-2">
+              <button
+                  onClick={() => setIsCustomizing(prev => !prev)}
+                  className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900"
+              >
+                  <FilterIcon className="h-4 w-4" />
+                  {isCustomizing ? 'Ocultar' : 'Personalizar'}
+              </button>
+              {!isCustomizing && (
+                  <button
+                      onClick={handleGenerateNewWod}
+                      disabled={isLoading}
+                      className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-400 dark:focus:ring-offset-neutral-900"
+                  >
+                      <DiceIcon className="h-4 w-4" />
+                      Generar Nuevo
+                  </button>
+              )}
+            </div>
+          </div>
+
+          {isCustomizing && (
+              <WodControls
+                location={location}
+                setLocation={setLocation}
+                equipment={equipment}
+                setEquipment={setEquipment}
+                level={level}
+                setLevel={setLevel}
+                injury={injury}
+                setInjury={setInjury}
+                onGenerate={() => {
+                  handleGenerateNewWod();
+                  setIsCustomizing(false);
+                }}
+                disabled={isLoading}
+              />
+          )}
+
+          {renderContent()}
+        </main>
+
+        <footer className="text-center py-6 text-neutral-500 text-sm">
+            <p>Impulsado por IA para superar tus l&iacute;mites.</p>
+            <p>&copy; {new Date().getFullYear()} Generador de WOD. Todos los derechos reservados.</p>
+        </footer>
     </div>
   );
 }
