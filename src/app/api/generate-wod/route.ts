@@ -3,9 +3,60 @@ import { GoogleGenAI, Type } from '@google/genai';
 import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/types/profile';
 
+// --- Feedback context ---
+
+interface FeedbackRecord {
+  difficulty_rating: number;
+  total_time_minutes: number | null;
+  rx_or_scaled: string;
+  notes: string | null;
+  wod_snapshot: { title: string; metcon: { movements?: string[] } };
+  created_at: string;
+}
+
+function buildFeedbackContext(feedbackRecords: FeedbackRecord[]): string {
+  if (!feedbackRecords.length) return '';
+
+  const avgDifficulty = feedbackRecords.reduce((sum, f) => sum + f.difficulty_rating, 0) / feedbackRecords.length;
+
+  const recentMovements = feedbackRecords
+    .flatMap((f) => f.wod_snapshot.metcon?.movements ?? [])
+    .slice(0, 15);
+
+  const lines: string[] = [
+    'HISTORIAL DE RENDIMIENTO RECIENTE:',
+    `- Entrenamientos registrados: ${feedbackRecords.length}`,
+    `- Dificultad promedio percibida: ${avgDifficulty.toFixed(1)}/10`,
+  ];
+
+  if (avgDifficulty < 4) {
+    lines.push('- DIRECTIVA: El atleta encuentra los entrenamientos fáciles. AUMENTAR la intensidad, cargas, y/o volumen.');
+  } else if (avgDifficulty > 8) {
+    lines.push('- DIRECTIVA: El atleta encuentra los entrenamientos muy difíciles. REDUCIR ligeramente la intensidad o volumen. Priorizar recuperación.');
+  } else {
+    lines.push('- DIRECTIVA: La intensidad parece adecuada. Mantener nivel similar con variación de estímulos.');
+  }
+
+  const scaledCount = feedbackRecords.filter((f) => f.rx_or_scaled === 'Scaled').length;
+  if (scaledCount > feedbackRecords.length / 2) {
+    lines.push('- El atleta frecuentemente escala los WODs. Diseñar entrenamientos más accesibles con opciones de escalado claras.');
+  }
+
+  if (recentMovements.length > 0) {
+    lines.push(`- Movimientos recientes (evitar repetir): ${recentMovements.join(', ')}`);
+  }
+
+  for (const f of feedbackRecords.slice(0, 3)) {
+    const date = new Date(f.created_at).toLocaleDateString('es-ES');
+    lines.push(`  · ${date}: "${f.wod_snapshot.title}" — Dificultad ${f.difficulty_rating}/10, ${f.rx_or_scaled}${f.total_time_minutes ? `, ${f.total_time_minutes}min` : ''}${f.notes ? ` — "${f.notes}"` : ''}`);
+  }
+
+  return lines.join('\n');
+}
+
 // --- Prompt builders ---
 
-function buildSystemInstruction(profile: Profile): string {
+function buildSystemInstruction(profile: Profile, feedbackContext?: string): string {
   const trainingLabel = profile.training_type === 'Calistenia'
     ? 'Calistenia (calisthenics / bodyweight training)'
     : 'CrossFit';
@@ -35,6 +86,7 @@ PERFIL DEL ATLETA:
     buildObjectiveDirectives(profile),
     buildInjuryDirectives(profile),
     buildAgeDirectives(profile),
+    feedbackContext || '',
   ];
 
   return sections.filter(Boolean).join('\n\n');
@@ -217,9 +269,19 @@ export async function POST(request: NextRequest) {
     // Empty body is fine
   }
 
+  // Load recent feedback for progressive WOD generation
+  const { data: recentFeedback } = await supabase
+    .from('workout_feedback')
+    .select('difficulty_rating, total_time_minutes, rx_or_scaled, notes, wod_snapshot, created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const feedbackContext = buildFeedbackContext((recentFeedback ?? []) as FeedbackRecord[]);
+
   // Build prompt
   const typedProfile = profile as Profile;
-  const systemInstruction = buildSystemInstruction(typedProfile);
+  const systemInstruction = buildSystemInstruction(typedProfile, feedbackContext);
   const userPrompt = buildUserPrompt(sessionNotes);
 
   // Gemini schema (same structure as before)

@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import type { Wod, SavedWod } from '@/types/wod';
+import type { Wod, SavedWod, WorkoutFeedback, WorkoutFeedbackInput, GeminiAnalysis } from '@/types/wod';
 
 export async function saveWod(userId: string, wod: Wod): Promise<SavedWod> {
   const supabase = createClient();
@@ -55,4 +55,60 @@ export async function bulkInsertWods(
   const rows = wods.map((w) => ({ user_id: userId, wod: w.wod, created_at: w.created_at }));
   const { error } = await supabase.from('wods').insert(rows);
   if (error) throw new Error(`Error en migración de WODs: ${error.message}`);
+}
+
+// --- Workout Feedback ---
+
+export async function saveFeedback(userId: string, input: WorkoutFeedbackInput): Promise<WorkoutFeedback> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('workout_feedback')
+    .insert({
+      user_id: userId,
+      wod_id: input.wod_id ?? null,
+      wod_snapshot: input.wod_snapshot,
+      difficulty_rating: input.difficulty_rating,
+      total_time_minutes: input.total_time_minutes ?? null,
+      rx_or_scaled: input.rx_or_scaled,
+      notes: input.notes ?? null,
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(`Error al guardar resultado: ${error.message}`);
+  return data as WorkoutFeedback;
+}
+
+export async function getFeedbackForWod(wodId: string): Promise<WorkoutFeedback | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('workout_feedback')
+    .select('*')
+    .eq('wod_id', wodId)
+    .maybeSingle();
+
+  if (error) throw new Error(`Error al cargar feedback: ${error.message}`);
+  return data as WorkoutFeedback | null;
+}
+
+export async function getRecentFeedback(limit = 5): Promise<WorkoutFeedback[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('workout_feedback')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw new Error(`Error al cargar feedback reciente: ${error.message}`);
+  return (data ?? []) as WorkoutFeedback[];
+}
+
+export async function updateFeedbackAnalysis(feedbackId: string, analysis: GeminiAnalysis): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('workout_feedback')
+    .update({ gemini_analysis: analysis })
+    .eq('id', feedbackId);
+
+  if (error) throw new Error(`Error al guardar análisis: ${error.message}`);
 }
