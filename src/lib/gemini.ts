@@ -1,10 +1,10 @@
-import type { Wod, GenerateWodParams } from '@/types/wod';
+import type { Wod, GenerateWodRequest } from '@/types/wod';
 
-export async function generateWod(params: GenerateWodParams): Promise<Wod> {
+export async function generateWod(request?: GenerateWodRequest): Promise<Wod> {
   const response = await fetch('/api/generate-wod', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(params),
+    body: JSON.stringify(request ?? {}),
   });
 
   if (!response.ok) {

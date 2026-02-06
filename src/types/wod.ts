@@ -17,19 +17,13 @@ export interface Wod {
   coolDown: WodSection;
 }
 
-export type Level = 'Principiante' | 'Intermedio' | 'Avanzado';
-export type Location = 'Box' | 'Casa';
-export type Equipment = 'Completo' | 'Peso Corporal';
-
-export interface GenerateWodParams {
-  location: Location;
-  equipment: Equipment;
-  level: Level;
-  injury?: string;
+export interface GenerateWodRequest {
+  sessionNotes?: string;
 }
 
 export interface SavedWod {
   id: string;
-  savedAt: string;
+  user_id: string;
   wod: Wod;
+  created_at: string;
 }
