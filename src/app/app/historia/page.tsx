@@ -1,30 +1,39 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import type { SavedWod } from '@/types/wod';
+import { getWodHistory, deleteWod } from '@/lib/wods';
 import WodDisplay from '@/components/WodDisplay';
+import Spinner from '@/components/Spinner';
 
 export default function HistoriaPage() {
   const [savedWods, setSavedWods] = useState<SavedWod[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('savedWods');
-      if (stored) {
-        setSavedWods(JSON.parse(stored));
+    const loadHistory = async () => {
+      try {
+        const data = await getWodHistory();
+        setSavedWods(data);
+      } catch (e) {
+        console.error('Error loading WOD history:', e);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (e) {
-      console.error('Failed to parse saved WODs from localStorage', e);
-    }
+    };
+    loadHistory();
   }, []);
 
-  const handleDelete = (id: string) => {
-    const updated = savedWods.filter((s) => s.id !== id);
-    setSavedWods(updated);
-    localStorage.setItem('savedWods', JSON.stringify(updated));
-  };
+  const handleDelete = useCallback(async (id: string) => {
+    try {
+      await deleteWod(id);
+      setSavedWods((prev) => prev.filter((s) => s.id !== id));
+    } catch (e) {
+      console.error('Error deleting WOD:', e);
+    }
+  }, []);
 
   const formatDate = (iso: string) => {
     return new Intl.DateTimeFormat('es-ES', {
@@ -40,7 +49,11 @@ export default function HistoriaPage() {
         <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">Tus WODs guardados</p>
       </div>
 
-      {savedWods.length === 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center py-16">
+          <Spinner />
+        </div>
+      ) : savedWods.length === 0 ? (
         <div className="text-center py-16">
           <h3 className="text-lg font-medium text-neutral-500 dark:text-neutral-400 mb-2">No hay WODs guardados</h3>
           <p className="text-sm text-neutral-400 dark:text-neutral-500 mb-6">
@@ -63,7 +76,7 @@ export default function HistoriaPage() {
               >
                 <div>
                   <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{saved.wod.title}</h3>
-                  <p className="text-sm text-neutral-500 dark:text-neutral-400">{formatDate(saved.savedAt)}</p>
+                  <p className="text-sm text-neutral-500 dark:text-neutral-400">{formatDate(saved.created_at)}</p>
                 </div>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
