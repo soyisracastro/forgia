@@ -1,193 +1,119 @@
-'use client';
-
-import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import type { Wod, Level, Location, Equipment, SavedWod } from '@/types/wod';
-import { generateWod } from '@/lib/gemini';
-import Spinner from '@/components/Spinner';
-import ErrorDisplay from '@/components/ErrorDisplay';
-import WodDisplay from '@/components/WodDisplay';
 import ThemeToggle from '@/components/ThemeToggle';
-import WodControls from '@/components/WodControls';
 
-const FilterIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-);
+const features = [
+  {
+    title: 'WODs con IA',
+    description: 'Entrenamientos generados por inteligencia artificial, únicos cada día y adaptados a tu nivel.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>
+    ),
+  },
+  {
+    title: 'Personalizado',
+    description: 'Adapta cada entrenamiento a tu equipamiento, ubicación y lesiones o limitaciones.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+    ),
+  },
+  {
+    title: 'Trackea tu Progreso',
+    description: 'Guarda tus entrenamientos y revisa tu historial para medir tu avance semana a semana.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    ),
+  },
+  {
+    title: 'Estructura Completa',
+    description: 'Calentamiento, fuerza, metcon y enfriamiento. Entrenamientos profesionales listos para ejecutar.',
+    icon: (
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+    ),
+  },
+];
 
-const DiceIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M8 8h.01"/><path d="M16 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
-);
-
-export default function Home() {
-  const [wod, setWod] = useState<Wod | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [currentDate, setCurrentDate] = useState<string>('');
-
-  // WOD Customization State
-  const [isCustomizing, setIsCustomizing] = useState<boolean>(false);
-  const [location, setLocation] = useState<Location>('Box');
-  const [equipment, setEquipment] = useState<Equipment>('Completo');
-  const [level, setLevel] = useState<Level>('Intermedio');
-  const [injury, setInjury] = useState<string>('');
-  const [justSaved, setJustSaved] = useState<boolean>(false);
-
-  const fetchAndSetWod = useCallback(async (params: { location: Location; equipment: Equipment; level: Level; injury: string }) => {
-    setIsLoading(true);
-    setError(null);
-    setWod(null);
-    try {
-      const newWod = await generateWod(params);
-      setWod(newWod);
-      localStorage.setItem('lastWod', JSON.stringify(newWod));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido al generar el WOD.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    setCurrentDate(new Intl.DateTimeFormat('es-ES', { dateStyle: 'full' }).format(new Date()));
-
-    try {
-      const stored = localStorage.getItem('lastWod');
-      if (stored) {
-        setWod(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error("Failed to parse WOD from localStorage", e);
-      localStorage.removeItem('lastWod');
-    }
-  }, []);
-
-  const handleGenerateNewWod = () => {
-    fetchAndSetWod({ location, equipment, level, injury });
-  };
-
-  const handleSaveWod = () => {
-    if (!wod) return;
-    const saved: SavedWod = {
-      id: crypto.randomUUID(),
-      savedAt: new Date().toISOString(),
-      wod,
-    };
-    try {
-      const existing: SavedWod[] = JSON.parse(localStorage.getItem('savedWods') || '[]');
-      existing.unshift(saved);
-      localStorage.setItem('savedWods', JSON.stringify(existing));
-      setJustSaved(true);
-      setTimeout(() => setJustSaved(false), 2000);
-    } catch {
-      console.error('Failed to save WOD to localStorage');
-    }
-  };
-
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="text-center">
-            <h3 className="text-lg text-neutral-500 dark:text-neutral-400 mb-4">Personalizando tu infierno diario...</h3>
-            <Spinner />
-        </div>
-      );
-    }
-    if (error) {
-      return <ErrorDisplay message={error} />;
-    }
-    if (wod) {
-      return (
-        <>
-          <WodDisplay wod={wod} />
-          <div className="flex justify-center mt-8">
-            <button
-              onClick={handleSaveWod}
-              disabled={justSaved}
-              className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-colors duration-200 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900 disabled:opacity-60"
-            >
-              {justSaved ? 'Guardado!' : 'Guardar WOD'}
-            </button>
-          </div>
-        </>
-      );
-    }
-    return (
-      <div className="text-center py-16">
-        <DiceIcon className="h-12 w-12 mx-auto text-neutral-300 dark:text-neutral-600 mb-4" />
-        <h3 className="text-lg font-medium text-neutral-500 dark:text-neutral-400 mb-2">No hay WOD todav&iacute;a</h3>
-        <p className="text-sm text-neutral-400 dark:text-neutral-500">Haz clic en &ldquo;Generar WOD&rdquo; para crear tu entrenamiento del d&iacute;a.</p>
-      </div>
-    );
-  };
-
+export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col relative">
-        <header className="py-8">
-          <div className="container mx-auto px-4 max-w-4xl">
-            <div className="flex justify-between items-start md:items-center">
-                <div className="text-left">
-                    <h1 className="text-3xl md:text-4xl font-semibold text-neutral-900 dark:text-neutral-100">WOD del D&iacute;a</h1>
-                    <p className="text-neutral-500 dark:text-neutral-400 text-base mt-1">{currentDate}</p>
-                </div>
-                <div className="flex items-center space-x-3 flex-shrink-0">
-                    <Link href="/historia" className="text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors">
-                      Historia
-                    </Link>
-                    <ThemeToggle />
-                </div>
-            </div>
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <header className="py-6">
+        <div className="container mx-auto px-4 max-w-5xl flex justify-between items-center">
+          <span className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+            WOD Generator
+          </span>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <Link
+              href="/login"
+              className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+            >
+              Iniciar sesión
+            </Link>
           </div>
-        </header>
+        </div>
+      </header>
 
-        <main className="container mx-auto px-4 py-8 max-w-4xl flex-grow">
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
-            <h2 className="text-xl font-semibold text-neutral-800 dark:text-neutral-200">Tu Entrenamiento</h2>
-            <div className="flex items-center gap-2">
-              <button
-                  onClick={() => setIsCustomizing(prev => !prev)}
-                  className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900"
+      {/* Hero */}
+      <section className="grow flex items-center">
+        <div className="container mx-auto px-4 max-w-5xl py-16 md:py-24">
+          <div className="max-w-2xl mx-auto text-center">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
+              Tu entrenador de CrossFit{' '}
+              <span className="text-red-500">potenciado por IA</span>
+            </h1>
+            <p className="mt-6 text-lg text-neutral-600 dark:text-neutral-400 max-w-xl mx-auto">
+              Genera WODs completos y personalizados en segundos. Calentamiento, fuerza, metcon y enfriamiento — todo adaptado a tu nivel y equipamiento.
+            </p>
+            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900"
               >
-                  <FilterIcon className="h-4 w-4" />
-                  {isCustomizing ? 'Ocultar' : 'Personalizar'}
-              </button>
-              {!isCustomizing && (
-                  <button
-                      onClick={handleGenerateNewWod}
-                      disabled={isLoading}
-                      className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-400 dark:focus:ring-offset-neutral-900"
-                  >
-                      <DiceIcon className="h-4 w-4" />
-                      {wod ? 'Generar Nuevo' : 'Generar WOD'}
-                  </button>
-              )}
+                Comenzar
+              </Link>
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors duration-200"
+              >
+                Ya tengo cuenta
+              </Link>
             </div>
           </div>
+        </div>
+      </section>
 
-          {isCustomizing && (
-              <WodControls
-                location={location}
-                setLocation={setLocation}
-                equipment={equipment}
-                setEquipment={setEquipment}
-                level={level}
-                setLevel={setLevel}
-                injury={injury}
-                setInjury={setInjury}
-                onGenerate={() => {
-                  handleGenerateNewWod();
-                  setIsCustomizing(false);
-                }}
-                disabled={isLoading}
-              />
-          )}
+      {/* Features */}
+      <section className="py-16 md:py-24 border-t border-neutral-200 dark:border-neutral-800">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <h2 className="text-2xl md:text-3xl font-bold text-center text-neutral-900 dark:text-neutral-100 mb-12">
+            Todo lo que necesitas para entrenar
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature) => (
+              <div
+                key={feature.title}
+                className="text-center p-6 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors"
+              >
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                  {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          {renderContent()}
-        </main>
-
-        <footer className="text-center py-6 text-neutral-500 text-sm">
-            <p>Impulsado por IA para superar tus l&iacute;mites.</p>
-            <p>&copy; {new Date().getFullYear()} Generador de WOD. Todos los derechos reservados.</p>
-        </footer>
+      {/* Footer */}
+      <footer className="text-center py-6 text-neutral-500 text-sm border-t border-neutral-200 dark:border-neutral-800">
+        <p>Impulsado por IA para superar tus límites.</p>
+        <p>&copy; {new Date().getFullYear()} Generador de WOD. Todos los derechos reservados.</p>
+      </footer>
     </div>
   );
 }
