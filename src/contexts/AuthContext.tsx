@@ -15,8 +15,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const supabase = createClient();
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -24,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const userRef = useRef<User | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
+    const supabase = createClient();
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -52,46 +51,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [fetchProfile]);
 
+  // Effect 1: Listen to auth state changes (synchronous callback only).
+  // We do NOT fetch profile here — doing so causes a circular deadlock
+  // because the Supabase REST client waits for _initialize() to finish,
+  // but _initialize() emitted the SIGNED_IN event that called us.
   useEffect(() => {
-    // Immediate local session check (no network, no locks)
-    const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-        userRef.current = currentUser;
+    const supabase = createClient();
+    let cancelled = false;
 
-        if (currentUser) {
-          await fetchProfile(currentUser.id);
-        }
-      } catch (err) {
-        console.error('Error initializing auth:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initAuth();
-
-    // Listen for subsequent auth changes (logout, token refresh, etc.)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
+        if (cancelled) return;
+
         const newUser = session?.user ?? null;
         setUser(newUser);
         userRef.current = newUser;
 
-        if (newUser) {
-          await fetchProfile(newUser.id);
-        } else {
+        if (!newUser) {
           setProfile(null);
+          setIsLoading(false);
         }
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, [fetchProfile]);
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Effect 2: Fetch profile when user changes (runs outside onAuthStateChange).
+  // This avoids the circular deadlock since _initialize() has already resolved
+  // by the time React processes the state update and runs this effect.
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+
+    fetchProfile(user.id).finally(() => {
+      if (!cancelled) {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, fetchProfile]);
 
   const signOut = async () => {
+    const supabase = createClient();
     try {
       await supabase.auth.signOut();
       setUser(null);

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import type { SavedWod } from '@/types/wod';
 import { getWodHistory, deleteWod } from '@/lib/wods';
 import WodDisplay from '@/components/WodDisplay';
+import CopyWodButton from '@/components/CopyWodButton';
+import PrintWodButton from '@/components/PrintWodButton';
 import Spinner from '@/components/Spinner';
 
 export default function HistoriaPage() {
@@ -44,7 +46,7 @@ export default function HistoriaPage() {
 
   return (
     <>
-      <div className="mb-6">
+      <div data-print-hide className="mb-6">
         <h1 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">Historia</h1>
         <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">Tus WODs guardados</p>
       </div>
@@ -69,8 +71,12 @@ export default function HistoriaPage() {
       ) : (
         <div className="space-y-4">
           {savedWods.map((saved) => (
-            <div key={saved.id} className="border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden">
+            <div
+              key={saved.id}
+              className={`border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden ${expandedId !== saved.id ? 'print:hidden' : ''}`}
+            >
               <button
+                data-print-hide
                 onClick={() => setExpandedId(expandedId === saved.id ? null : saved.id)}
                 className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
               >
@@ -95,8 +101,13 @@ export default function HistoriaPage() {
               </button>
               {expandedId === saved.id && (
                 <div className="px-6 pb-6 border-t border-neutral-200 dark:border-neutral-700 pt-6">
+                  <p className="hidden print:block print-date text-center text-sm text-neutral-500 mb-4">
+                    {formatDate(saved.created_at)}
+                  </p>
                   <WodDisplay wod={saved.wod} />
-                  <div className="flex justify-center mt-6">
+                  <div data-print-hide className="flex flex-wrap justify-center items-center gap-3 mt-6">
+                    <CopyWodButton wod={saved.wod} />
+                    <PrintWodButton />
                     <button
                       onClick={() => handleDelete(saved.id)}
                       className="text-sm text-red-500 hover:text-red-600 font-medium transition-colors"

@@ -7,6 +7,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --animate-fade-in-up: fade-in-up 0.4s ease-out both;
 }
 
 :root {
@@ -17,4 +18,82 @@
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: #171717 !important;
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+
+  .dark {
+    --background: #ffffff;
+    --foreground: #171717;
+  }
+
+  header,
+  footer,
+  nav,
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  .print-card {
+    background: white !important;
+    border: 1px solid #d4d4d4 !important;
+    border-left-width: 4px !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 12pt;
+  }
+
+  h1, h2, h3, h4, p, li, span {
+    color: #171717 !important;
+  }
+
+  .text-neutral-500,
+  .text-neutral-400 {
+    color: #525252 !important;
+  }
+
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .grid {
+    display: block !important;
+  }
+
+  @page {
+    margin: 1.5cm;
+  }
+
+  .print-title {
+    text-align: center;
+    font-size: 18pt;
+    font-weight: 700;
+    margin-bottom: 6pt;
+  }
+
+  .print-date {
+    text-align: center;
+    font-size: 10pt;
+    color: #525252 !important;
+    margin-bottom: 16pt;
+  }
 }

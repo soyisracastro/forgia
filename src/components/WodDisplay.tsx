@@ -30,13 +30,13 @@ const WodDisplay: React.FC<WodDisplayProps> = ({ wod }) => {
         </h2>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <WodSectionCard section={wod.warmUp} icon={<FireIcon />} />
-        <WodSectionCard section={wod.strengthSkill} icon={<BarbellIcon />} />
+        <WodSectionCard section={wod.warmUp} icon={<FireIcon />} sectionType="warmUp" animationDelay="0ms" />
+        <WodSectionCard section={wod.strengthSkill} icon={<BarbellIcon />} sectionType="strengthSkill" animationDelay="75ms" />
         <div className="lg:col-span-2">
-          <WodSectionCard section={wod.metcon} icon={<BoltIcon />} />
+          <WodSectionCard section={wod.metcon} icon={<BoltIcon />} sectionType="metcon" animationDelay="150ms" />
         </div>
         <div className="lg:col-span-2">
-          <WodSectionCard section={wod.coolDown} icon={<HeartPulseIcon />} />
+          <WodSectionCard section={wod.coolDown} icon={<HeartPulseIcon />} sectionType="coolDown" animationDelay="225ms" />
         </div>
       </div>
     </div>
