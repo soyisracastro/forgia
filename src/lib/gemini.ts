@@ -1,4 +1,5 @@
 import type { Wod, GenerateWodRequest, GeminiAnalysis, AnalyzeFeedbackRequest } from '@/types/wod';
+import type { TrainingIntelligenceResponse } from '@/app/api/training-intelligence/route';
 
 export async function generateWod(request?: GenerateWodRequest): Promise<Wod> {
   const response = await fetch('/api/generate-wod', {
@@ -27,5 +28,13 @@ export async function analyzeFeedback(request: AnalyzeFeedbackRequest): Promise<
     throw new Error(errorData.error || `La solicitud falló con el estado ${response.status}`);
   }
 
+  return response.json();
+}
+
+export async function fetchTrainingIntelligence(): Promise<TrainingIntelligenceResponse> {
+  const response = await fetch('/api/training-intelligence');
+  if (!response.ok) {
+    throw new Error('Error al cargar inteligencia de entrenamiento');
+  }
   return response.json();
 }

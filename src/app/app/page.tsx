@@ -12,6 +12,7 @@ import CopyWodButton from '@/components/CopyWodButton';
 import PrintWodButton from '@/components/PrintWodButton';
 import WorkoutFeedbackForm from '@/components/WorkoutFeedbackForm';
 import WorkoutAnalysis from '@/components/WorkoutAnalysis';
+import TrainingIntelligenceCard from '@/components/TrainingIntelligenceCard';
 
 const DiceIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M8 8h.01"/><path d="M16 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
@@ -213,7 +214,9 @@ export default function AppPage() {
         <p className="print-date text-neutral-500 dark:text-neutral-400 text-sm mt-1">{currentDate}</p>
       </div>
 
-      <div data-print-hide className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4 mt-6">
+      <TrainingIntelligenceCard />
+
+      <div data-print-hide className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
         <h2 className="text-xl font-semibold text-neutral-800 dark:text-neutral-200">Tu Entrenamiento</h2>
         <div className="flex items-center gap-2">
           <button
