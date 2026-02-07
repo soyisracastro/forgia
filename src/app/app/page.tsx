@@ -13,6 +13,7 @@ import PrintWodButton from '@/components/PrintWodButton';
 import WorkoutFeedbackForm from '@/components/WorkoutFeedbackForm';
 import WorkoutAnalysis from '@/components/WorkoutAnalysis';
 import TrainingIntelligenceCard from '@/components/TrainingIntelligenceCard';
+import LiveWorkoutOverlay from '@/components/live/LiveWorkoutOverlay';
 
 const DiceIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M8 8h.01"/><path d="M16 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
@@ -24,6 +25,10 @@ const NoteIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const ClipboardCheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+);
+
+const PlayIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="6 3 20 12 6 21 6 3"/></svg>
 );
 
 export default function AppPage() {
@@ -39,6 +44,8 @@ export default function AppPage() {
   const [savedWodId, setSavedWodId] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [savedFeedback, setSavedFeedback] = useState<WorkoutFeedback | null>(null);
+  const [showLiveMode, setShowLiveMode] = useState(false);
+  const [liveWorkoutTime, setLiveWorkoutTime] = useState<number | null>(null);
 
   // Load latest saved WOD from Supabase on mount
   useEffect(() => {
@@ -99,6 +106,7 @@ export default function AppPage() {
     setSavedWodId(null);
     setShowFeedback(false);
     setSavedFeedback(null);
+    setLiveWorkoutTime(null);
 
     try {
       const newWod = await generateWod(
@@ -166,6 +174,13 @@ export default function AppPage() {
             >
               {justSaved ? 'Guardado!' : savedWodId ? 'Guardado' : 'Guardar WOD'}
             </button>
+            <button
+              onClick={() => setShowLiveMode(true)}
+              className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900"
+            >
+              <PlayIcon className="h-4 w-4" />
+              Iniciar Entrenamiento
+            </button>
             {!savedFeedback && (
               <button
                 onClick={() => setShowFeedback((prev) => !prev)}
@@ -185,6 +200,7 @@ export default function AppPage() {
                 wodId={savedWodId}
                 userId={user.id}
                 onSaved={handleFeedbackSaved}
+                initialTotalTime={liveWorkoutTime}
               />
             </div>
           )}
@@ -254,6 +270,19 @@ export default function AppPage() {
       )}
 
       {renderContent()}
+
+      {showLiveMode && wod && (
+        <LiveWorkoutOverlay
+          wod={wod}
+          onFinish={(totalMinutes) => {
+            setShowLiveMode(false);
+            setLiveWorkoutTime(totalMinutes);
+            setShowFeedback(true);
+            if (!savedWodId) handleSaveWod();
+          }}
+          onCancel={() => setShowLiveMode(false)}
+        />
+      )}
     </>
   );
 }
