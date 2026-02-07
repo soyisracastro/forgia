@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
 import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/types/profile';
+import { buildPeriodizationAnalysis, buildPeriodizationContext } from '@/lib/periodization';
+import type { WodRecord, FeedbackRecord as PeriodizationFeedbackRecord } from '@/lib/periodization';
 
 // --- Feedback context ---
 
@@ -56,7 +58,7 @@ function buildFeedbackContext(feedbackRecords: FeedbackRecord[]): string {
 
 // --- Prompt builders ---
 
-function buildSystemInstruction(profile: Profile, feedbackContext?: string): string {
+function buildSystemInstruction(profile: Profile, feedbackContext?: string, periodizationContext?: string): string {
   const trainingLabel = profile.training_type === 'Calistenia'
     ? 'Calistenia (calisthenics / bodyweight training)'
     : 'CrossFit';
@@ -87,6 +89,7 @@ PERFIL DEL ATLETA:
     buildInjuryDirectives(profile),
     buildAgeDirectives(profile),
     feedbackContext || '',
+    periodizationContext || '',
   ];
 
   return sections.filter(Boolean).join('\n\n');
@@ -269,19 +272,41 @@ export async function POST(request: NextRequest) {
     // Empty body is fine
   }
 
-  // Load recent feedback for progressive WOD generation
-  const { data: recentFeedback } = await supabase
-    .from('workout_feedback')
-    .select('difficulty_rating, total_time_minutes, rx_or_scaled, notes, wod_snapshot, created_at')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(5);
+  // Load 28 days of feedback + WODs for periodization analysis
+  const twentyEightDaysAgo = new Date();
+  twentyEightDaysAgo.setDate(twentyEightDaysAgo.getDate() - 28);
 
-  const feedbackContext = buildFeedbackContext((recentFeedback ?? []) as FeedbackRecord[]);
+  const [feedbackResult, wodsResult] = await Promise.all([
+    supabase
+      .from('workout_feedback')
+      .select('difficulty_rating, total_time_minutes, rx_or_scaled, notes, wod_snapshot, created_at')
+      .eq('user_id', user.id)
+      .gte('created_at', twentyEightDaysAgo.toISOString())
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('wods')
+      .select('id, wod, created_at')
+      .eq('user_id', user.id)
+      .gte('created_at', twentyEightDaysAgo.toISOString())
+      .order('created_at', { ascending: false }),
+  ]);
+
+  const allFeedback = (feedbackResult.data ?? []) as FeedbackRecord[];
+  const allWods = (wodsResult.data ?? []) as WodRecord[];
+
+  // Existing feedback context (last 5 for backward compatibility)
+  const feedbackContext = buildFeedbackContext(allFeedback.slice(0, 5));
+
+  // Periodization context from full 28-day window
+  const periodizationAnalysis = buildPeriodizationAnalysis(
+    allWods as WodRecord[],
+    allFeedback as unknown as PeriodizationFeedbackRecord[]
+  );
+  const periodizationContext = buildPeriodizationContext(periodizationAnalysis);
 
   // Build prompt
   const typedProfile = profile as Profile;
-  const systemInstruction = buildSystemInstruction(typedProfile, feedbackContext);
+  const systemInstruction = buildSystemInstruction(typedProfile, feedbackContext, periodizationContext);
   const userPrompt = buildUserPrompt(sessionNotes);
 
   // Gemini schema (same structure as before)
