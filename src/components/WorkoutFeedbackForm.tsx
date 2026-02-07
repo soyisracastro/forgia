@@ -10,6 +10,7 @@ interface WorkoutFeedbackFormProps {
   wodId?: string | null;
   userId: string;
   onSaved: (feedback: WorkoutFeedback) => void;
+  initialTotalTime?: number | null;
 }
 
 const difficultyLabels: Record<number, string> = {
@@ -25,9 +26,9 @@ const difficultyLabels: Record<number, string> = {
   10: 'Brutal',
 };
 
-export default function WorkoutFeedbackForm({ wod, wodId, userId, onSaved }: WorkoutFeedbackFormProps) {
+export default function WorkoutFeedbackForm({ wod, wodId, userId, onSaved, initialTotalTime }: WorkoutFeedbackFormProps) {
   const [difficulty, setDifficulty] = useState(5);
-  const [totalTime, setTotalTime] = useState('');
+  const [totalTime, setTotalTime] = useState(initialTotalTime ? String(Math.round(initialTotalTime)) : '');
   const [rxOrScaled, setRxOrScaled] = useState<RxOrScaled>('Rx');
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
