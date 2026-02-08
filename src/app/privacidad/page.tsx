@@ -18,7 +18,7 @@ export default function PrivacidadPage() {
       </h2>
       <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-4">
         Forgia (en adelante, &quot;la plataforma&quot;) es responsable del tratamiento de los datos personales que usted proporciona al utilizar nuestros servicios. Para cualquier consulta relacionada con la privacidad de sus datos, puede contactarnos en:{' '}
-        <strong>privacidad@forgia.app</strong>.
+        <strong>privacidad@forgia.fit</strong>.
       </p>
 
       <h2 className="text-xl md:text-2xl font-semibold mt-10 mb-4 text-neutral-900 dark:text-neutral-100">
@@ -68,7 +68,7 @@ export default function PrivacidadPage() {
       </h2>
       <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-4">
         Usted tiene derecho a Acceder, Rectificar, Cancelar u Oponerse al tratamiento de sus datos personales (derechos ARCO). Para ejercer cualquiera de estos derechos, envíe una solicitud a{' '}
-        <strong>privacidad@forgia.app</strong> indicando:
+        <strong>privacidad@forgia.fit</strong> indicando:
       </p>
       <ul className="list-disc list-inside space-y-2 mb-4 text-neutral-700 dark:text-neutral-300">
         <li>Su nombre completo y correo electrónico asociado a la cuenta</li>

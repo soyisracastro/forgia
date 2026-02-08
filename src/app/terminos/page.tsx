@@ -104,7 +104,7 @@ export default function TerminosPage() {
         8. Cancelación y eliminación de cuenta
       </h2>
       <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed mb-4">
-        Puede solicitar la cancelación de su cuenta y la eliminación de sus datos personales en cualquier momento enviando una solicitud a <strong>privacidad@forgia.app</strong>. Para más información sobre sus derechos, consulte nuestro{' '}
+        Puede solicitar la cancelación de su cuenta y la eliminación de sus datos personales en cualquier momento enviando una solicitud a <strong>privacidad@forgia.fit</strong>. Para más información sobre sus derechos, consulte nuestro{' '}
         <a href="/privacidad" className="text-red-500 hover:text-red-600 underline">Aviso de Privacidad</a>.
       </p>
 
