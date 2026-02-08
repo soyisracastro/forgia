@@ -49,13 +49,14 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-900 px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
+          <p className="text-2xl font-semibold text-red-500 mb-4">Forgia</p>
           <h1 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
-            {isSignUp ? 'Crear Cuenta' : 'Iniciar Sesi&oacute;n'}
+            {isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
           </h1>
           <p className="mt-2 text-neutral-500 dark:text-neutral-400">
             {isSignUp
               ? 'Crea una cuenta para guardar tu historial de WODs'
-              : 'Inicia sesi&oacute;n para acceder a tu historial'}
+              : 'Inicia sesión para acceder a tu historial'}
           </p>
         </div>
 

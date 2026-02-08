@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Generador de WOD de CrossFit",
-  description: "Genera tu Workout of the Day personalizado con IA",
+  title: "Forgia — Tu entrenador de CrossFit con IA",
+  description: "Genera WODs personalizados con inteligencia artificial. Calentamiento, fuerza, metcon y enfriamiento adaptados a tu nivel.",
 };
 
 export default function RootLayout({
