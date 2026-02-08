@@ -32,6 +32,7 @@ export interface Profile {
   objectives: Objective[] | null;
   training_type: TrainingType | null;
   equipment_level: EquipmentLevel | null;
+  terms_accepted_at: string | null;
   created_at: string;
   updated_at: string;
   onboarding_completed: boolean;
