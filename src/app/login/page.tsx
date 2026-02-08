@@ -8,6 +8,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -21,7 +22,7 @@ export default function LoginPage() {
     const supabase = createClient();
 
     if (isSignUp) {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -31,6 +32,12 @@ export default function LoginPage() {
       if (error) {
         setError(error.message);
       } else {
+        if (data.user) {
+          await supabase
+            .from('profiles')
+            .update({ terms_accepted_at: new Date().toISOString() })
+            .eq('id', data.user.id);
+        }
         setMessage('Revisa tu correo para confirmar tu cuenta.');
       }
     } else {
@@ -49,13 +56,14 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-white dark:bg-neutral-900 px-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
+          <p className="text-2xl font-semibold text-red-500 mb-4">Forgia</p>
           <h1 className="text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
-            {isSignUp ? 'Crear Cuenta' : 'Iniciar Sesi&oacute;n'}
+            {isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
           </h1>
           <p className="mt-2 text-neutral-500 dark:text-neutral-400">
             {isSignUp
               ? 'Crea una cuenta para guardar tu historial de WODs'
-              : 'Inicia sesi&oacute;n para acceder a tu historial'}
+              : 'Inicia sesión para acceder a tu historial'}
           </p>
         </div>
 
@@ -91,6 +99,28 @@ export default function LoginPage() {
             />
           </div>
 
+          {isSignUp && (
+            <div className="flex items-start gap-3">
+              <input
+                id="terms"
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-neutral-300 dark:border-neutral-600 text-red-500 focus:ring-red-500"
+              />
+              <label htmlFor="terms" className="text-sm text-neutral-600 dark:text-neutral-400">
+                Acepto los{' '}
+                <a href="/terminos" target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600 underline">
+                  Términos y Condiciones
+                </a>{' '}
+                y el{' '}
+                <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600 underline">
+                  Aviso de Privacidad
+                </a>
+              </label>
+            </div>
+          )}
+
           {error && (
             <div className="bg-red-100 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg text-sm">
               {error}
@@ -105,7 +135,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (isSignUp && !termsAccepted)}
             className="w-full flex items-center justify-center px-4 py-2.5 text-base font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-400 dark:focus:ring-offset-neutral-900"
           >
             {loading ? 'Cargando...' : isSignUp ? 'Crear cuenta' : 'Iniciar sesi\u00F3n'}
@@ -117,6 +147,7 @@ export default function LoginPage() {
             type="button"
             onClick={() => {
               setIsSignUp(!isSignUp);
+              setTermsAccepted(false);
               setError('');
               setMessage('');
             }}

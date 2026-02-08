@@ -38,8 +38,8 @@ export default function LandingPage() {
       {/* Header */}
       <header className="py-6">
         <div className="container mx-auto px-4 max-w-5xl flex justify-between items-center">
-          <span className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-            WOD Generator
+          <span className="text-xl font-semibold text-red-500">
+            Forgia
           </span>
           <div className="flex items-center gap-4">
             <ThemeToggle />
@@ -112,7 +112,16 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="text-center py-6 text-neutral-500 text-sm border-t border-neutral-200 dark:border-neutral-800">
         <p>Impulsado por IA para superar tus límites.</p>
-        <p>&copy; {new Date().getFullYear()} Generador de WOD. Todos los derechos reservados.</p>
+        <div className="flex justify-center gap-4 my-2">
+          <Link href="/privacidad" className="hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors">
+            Aviso de Privacidad
+          </Link>
+          <span>|</span>
+          <Link href="/terminos" className="hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors">
+            Términos y Condiciones
+          </Link>
+        </div>
+        <p>&copy; {new Date().getFullYear()} Forgia. Todos los derechos reservados.</p>
       </footer>
     </div>
   );

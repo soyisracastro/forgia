@@ -10,7 +10,7 @@ export default function AppHeader() {
   const pathname = usePathname();
 
   const navLinks = [
-    { href: '/app', label: 'WOD del Día' },
+    { href: '/app', label: 'WOD' },
     { href: '/app/historia', label: 'Historia' },
   ];
 
@@ -19,8 +19,8 @@ export default function AppHeader() {
       <div className="container mx-auto px-4 max-w-4xl">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <Link href="/app" className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-              WOD Generator
+            <Link href="/app" className="text-xl font-semibold text-red-500">
+              Forgia
             </Link>
             <nav className="hidden sm:flex items-center gap-4">
               {navLinks.map((link) => (

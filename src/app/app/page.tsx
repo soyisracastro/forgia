@@ -226,14 +226,13 @@ export default function AppPage() {
   return (
     <>
       <div className="mb-2">
-        <h1 className="print-title text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">WOD del Día</h1>
+        <h1 className="print-title text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">Tu Entrenamiento</h1>
         <p className="print-date text-neutral-500 dark:text-neutral-400 text-sm mt-1">{currentDate}</p>
       </div>
 
       <TrainingIntelligenceCard />
 
-      <div data-print-hide className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
-        <h2 className="text-xl font-semibold text-neutral-800 dark:text-neutral-200">Tu Entrenamiento</h2>
+      <div data-print-hide className="flex flex-col sm:flex-row justify-end sm:items-center mb-6 gap-4">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowNotes((prev) => !prev)}
