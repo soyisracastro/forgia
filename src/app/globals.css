@@ -11,6 +11,18 @@
   --animate-timer-pulse: timer-pulse 1s ease-in-out infinite;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+@utility no-scrollbar {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -33,8 +45,13 @@
 }
 
 @keyframes timer-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 
 @media print {
@@ -67,7 +84,13 @@
     margin-bottom: 12pt;
   }
 
-  h1, h2, h3, h4, p, li, span {
+  h1,
+  h2,
+  h3,
+  h4,
+  p,
+  li,
+  span {
     color: #171717 !important;
   }
 
