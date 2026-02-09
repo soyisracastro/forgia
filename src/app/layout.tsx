@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Forgia — Tu entrenador de CrossFit con IA",
-  description: "Genera WODs personalizados con inteligencia artificial. Calentamiento, fuerza, metcon y enfriamiento adaptados a tu nivel.",
+  description:
+    "Genera WODs personalizados con inteligencia artificial. Calentamiento, fuerza, metcon y enfriamiento adaptados a tu nivel.",
 };
 
 export default function RootLayout({
@@ -28,10 +30,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100`}
       >
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
+      <GoogleAnalytics gaId="G-Q9GFWE720C" />
     </html>
   );
 }
