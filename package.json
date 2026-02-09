@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/genai": "^1.39.0",
+    "@next/third-parties": "^16.1.6",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.94.0",
     "lucide-react": "^0.563.0",
