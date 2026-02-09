@@ -86,15 +86,7 @@ export default function LandingPage() {
           <span className="text-xl font-semibold text-red-500">
             Forgia
           </span>
-          <div className="flex items-center gap-4">
-            <ThemeToggle />
-            <Link
-              href="/login"
-              className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
-            >
-              Iniciar sesión
-            </Link>
-          </div>
+          <ThemeToggle />
         </div>
       </header>
 

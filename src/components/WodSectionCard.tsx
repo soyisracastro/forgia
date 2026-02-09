@@ -4,96 +4,224 @@ type SectionType = 'warmUp' | 'strengthSkill' | 'metcon' | 'coolDown';
 
 interface WodSectionCardProps {
   section: WodSection;
-  icon: React.ReactNode;
   sectionType: SectionType;
   animationDelay?: string;
 }
 
-const borderColorMap: Record<SectionType, string> = {
-  warmUp: 'border-l-amber-400/70 dark:border-l-amber-500/40',
-  strengthSkill: 'border-l-blue-400/70 dark:border-l-blue-500/40',
-  metcon: 'border-l-red-500 dark:border-l-red-500/80',
-  coolDown: 'border-l-emerald-400/70 dark:border-l-emerald-500/40',
+const accentColorMap: Record<SectionType, string> = {
+  warmUp: 'bg-amber-400',
+  strengthSkill: 'bg-blue-400',
+  metcon: 'bg-red-500',
+  coolDown: 'bg-emerald-400',
 };
 
 const iconColorMap: Record<SectionType, string> = {
-  warmUp: 'text-amber-500',
-  strengthSkill: 'text-blue-500',
+  warmUp: 'text-amber-500 dark:text-amber-400',
+  strengthSkill: 'text-blue-500 dark:text-blue-400',
   metcon: 'text-red-500',
-  coolDown: 'text-emerald-500',
+  coolDown: 'text-emerald-500 dark:text-emerald-400',
+};
+
+const iconBgMap: Record<SectionType, string> = {
+  warmUp: 'bg-amber-500/10 text-amber-500 dark:text-amber-400',
+  strengthSkill: 'bg-blue-500/10 text-blue-500 dark:text-blue-400',
+  metcon: 'bg-red-500/15 text-red-500',
+  coolDown: 'bg-emerald-500/10 text-emerald-500 dark:text-emerald-400',
 };
 
 const bulletColorMap: Record<SectionType, string> = {
-  warmUp: 'bg-amber-400/60 dark:bg-amber-500/40',
-  strengthSkill: 'bg-blue-400/60 dark:bg-blue-500/40',
-  metcon: 'bg-red-500/60 dark:bg-red-500/40',
-  coolDown: 'bg-emerald-400/60 dark:bg-emerald-500/40',
+  warmUp: 'bg-amber-400',
+  strengthSkill: 'bg-blue-400',
+  metcon: 'bg-red-500',
+  coolDown: 'bg-emerald-400',
 };
 
-const WodSectionCard: React.FC<WodSectionCardProps> = ({ section, icon, sectionType, animationDelay }) => {
+const subtitleMap: Record<SectionType, string> = {
+  warmUp: 'Activación',
+  strengthSkill: 'Potencia',
+  metcon: 'High Intensity',
+  coolDown: 'Recuperación',
+};
+
+// --- Internal SVG Icons ---
+
+const SectionIcon: React.FC<{ sectionType: SectionType }> = ({ sectionType }) => {
+  const cls = 'h-5 w-5';
+  switch (sectionType) {
+    case 'warmUp':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+        </svg>
+      );
+    case 'strengthSkill':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m6.5 6.5 11 11" /><path d="m21 21-1-1" /><path d="m3 3 1 1" /><path d="m18 22 4-4" /><path d="m2 6 4-4" /><path d="m3 10 7-7" /><path d="m14 21 7-7" />
+        </svg>
+      );
+    case 'metcon':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+        </svg>
+      );
+    case 'coolDown':
+      return (
+        <svg className={cls} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+        </svg>
+      );
+  }
+};
+
+const ClockIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+const WarningIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" />
+  </svg>
+);
+
+// --- Helper Render Functions ---
+
+function renderMetconItems(items: string[]) {
+  return (
+    <div className="space-y-0 mt-3">
+      {items.map((item, index) => {
+        // Try to split "15 Wall Balls (9/6 kg)" into reps and movement
+        const match = item.match(/^(\d+[\s\w]*?)\s+(.+)$/);
+        return (
+          <div
+            key={index}
+            className="flex items-center justify-between py-3 border-b border-neutral-200/40 dark:border-neutral-700/30 last:border-b-0"
+          >
+            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+              {match ? match[2] : item}
+            </span>
+            {match && (
+              <span className="text-sm font-bold text-red-500 shrink-0 ml-3">
+                {match[1].trim()}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function renderBulletItems(items: string[], sectionType: SectionType) {
+  return (
+    <ul className="space-y-2.5 mt-3">
+      {items.map((item, index) => (
+        <li key={index} className="flex items-start">
+          <span className={`shrink-0 w-1.5 h-1.5 ${bulletColorMap[sectionType]} rounded-full mr-3 mt-2`} />
+          <span className="text-sm text-neutral-600 dark:text-neutral-300">{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function renderStrategyTip(notes: string) {
+  return (
+    <div className="mt-4 flex items-start gap-2.5 p-3 bg-amber-500/5 dark:bg-amber-500/10 rounded-lg border border-amber-500/20">
+      <WarningIcon className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-0.5">
+          Estrategia
+        </p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">{notes}</p>
+      </div>
+    </div>
+  );
+}
+
+// --- Main Component ---
+
+const WodSectionCard: React.FC<WodSectionCardProps> = ({ section, sectionType, animationDelay }) => {
   const isMetcon = sectionType === 'metcon';
   const items = section.movements || section.parts || section.details || [];
 
   const cardBg = isMetcon
-    ? 'bg-neutral-50 dark:bg-neutral-800/70 shadow-sm'
-    : 'bg-neutral-100 dark:bg-neutral-800/50';
-
-  const titleSize = isMetcon ? 'text-xl font-bold' : 'text-lg font-bold tracking-tight';
+    ? 'bg-neutral-50 dark:bg-neutral-800/80 border-red-500/20 dark:border-red-500/10 shadow-sm'
+    : 'bg-white dark:bg-neutral-800/50 border-neutral-200 dark:border-neutral-700/60';
 
   return (
     <div
-      className={`print-card ${cardBg} rounded-lg p-5 lg:p-6 border border-neutral-200 dark:border-neutral-700/60 border-l-4 ${borderColorMap[sectionType]} overflow-hidden animate-fade-in-up`}
+      className={`print-card relative rounded-xl overflow-hidden border ${cardBg} animate-fade-in-up`}
       style={animationDelay ? { animationDelay } : undefined}
     >
-      {/* Header */}
-      <div className="flex items-center pb-3 mb-3 border-b border-neutral-200/60 dark:border-neutral-700/40">
-        <div className={`${iconColorMap[sectionType]} mr-3 shrink-0`}>{icon}</div>
-        <div className="min-w-0">
-          <h3 className={`${titleSize} text-neutral-900 dark:text-neutral-100`}>{section.title}</h3>
-          <div className="flex items-center gap-2 mt-0.5">
-            {section.duration && (
-              <span className="inline-block bg-neutral-200 dark:bg-neutral-700/60 px-2 py-0.5 rounded-full text-xs font-medium text-neutral-600 dark:text-neutral-300">
-                {section.duration}
-              </span>
-            )}
-            {section.type && (
-              <span className="text-sm font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
-                {section.type}
-              </span>
-            )}
+      {/* Left accent bar */}
+      <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${accentColorMap[sectionType]} rounded-l-xl`} />
+
+      {/* Metcon gradient overlay */}
+      {isMetcon && (
+        <div className="absolute inset-0 bg-linear-to-br from-red-500/5 to-transparent pointer-events-none" />
+      )}
+
+      <div className="relative pl-5 pr-5 py-5">
+        {/* Header row */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="min-w-0 flex-1">
+            <p className={`text-xs font-bold uppercase tracking-widest mb-1 ${iconColorMap[sectionType]}`}>
+              {subtitleMap[sectionType]}
+            </p>
+            <h3 className={`${isMetcon ? 'text-xl' : 'text-lg'} font-bold text-neutral-900 dark:text-neutral-100`}>
+              {section.title}
+            </h3>
+            {/* Duration + type badges */}
+            <div className="flex items-center gap-2 mt-1.5">
+              {section.duration && (
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                  <ClockIcon className="h-3.5 w-3.5" />
+                  {section.duration}
+                </span>
+              )}
+              {section.type && (
+                <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide ${
+                  isMetcon
+                    ? 'bg-red-500/15 text-red-500'
+                    : 'bg-neutral-200 dark:bg-neutral-700/60 text-neutral-600 dark:text-neutral-300'
+                }`}>
+                  {section.type}
+                </span>
+              )}
+            </div>
+          </div>
+          {/* Circular icon */}
+          <div className={`shrink-0 ml-3 w-10 h-10 rounded-full flex items-center justify-center ${iconBgMap[sectionType]}`}>
+            <SectionIcon sectionType={sectionType} />
           </div>
         </div>
+
+        {/* Description */}
+        {section.description && (
+          <p className="mb-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-300">
+            {section.description}
+          </p>
+        )}
+
+        {/* Items list */}
+        {items.length > 0 && (
+          isMetcon ? renderMetconItems(items) : renderBulletItems(items, sectionType)
+        )}
+
+        {/* Metcon: strategy tip from notes */}
+        {isMetcon && section.notes && renderStrategyTip(section.notes)}
+
+        {/* Non-metcon: regular notes */}
+        {!isMetcon && section.notes && (
+          <p className="mt-4 text-sm italic text-neutral-500 dark:text-neutral-400 border-t border-neutral-200/60 dark:border-neutral-700/40 pt-3">
+            <strong className={iconColorMap[sectionType]}>Notas:</strong> {section.notes}
+          </p>
+        )}
       </div>
-
-      {/* Description */}
-      {section.description && (
-        <p className="mb-4 text-[15px] leading-relaxed text-neutral-600 dark:text-neutral-300">{section.description}</p>
-      )}
-
-      {/* Items list */}
-      {items.length > 0 && (
-        <ul className="space-y-3">
-          {items.map((item, index) => (
-            <li key={index} className="flex items-start">
-              {isMetcon ? (
-                <span className="shrink-0 w-6 text-sm font-bold text-red-500/80 dark:text-red-400/80">
-                  {index + 1}.
-                </span>
-              ) : (
-                <span className={`shrink-0 w-2 h-2 ${bulletColorMap[sectionType]} rounded-full mr-3 mt-1.75`} />
-              )}
-              <span className="text-neutral-700 dark:text-neutral-200">{item}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* Notes */}
-      {section.notes && (
-        <p className="mt-4 text-sm italic text-neutral-500 dark:text-neutral-400 border-t border-neutral-200/60 dark:border-neutral-700/40 pt-3">
-          <strong className={iconColorMap[sectionType]}>Notas:</strong> {section.notes}
-        </p>
-      )}
     </div>
   );
 };

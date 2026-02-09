@@ -78,11 +78,15 @@ html {
   .print-card {
     background: white !important;
     border: 1px solid #d4d4d4 !important;
-    border-left-width: 4px !important;
     box-shadow: none !important;
     break-inside: avoid;
     page-break-inside: avoid;
     margin-bottom: 12pt;
+  }
+
+  /* Keep accent bar visible in print with neutral color */
+  .print-card > div:first-child {
+    background-color: #a3a3a3 !important;
   }
 
   h1,

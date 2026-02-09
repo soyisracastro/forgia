@@ -19,9 +19,10 @@ const CheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 interface CopyWodButtonProps {
   wod: Wod;
+  variant?: 'default' | 'icon';
 }
 
-export default function CopyWodButton({ wod }: CopyWodButtonProps) {
+export default function CopyWodButton({ wod, variant = 'default' }: CopyWodButtonProps) {
   const [justCopied, setJustCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -30,6 +31,19 @@ export default function CopyWodButton({ wod }: CopyWodButtonProps) {
     setJustCopied(true);
     setTimeout(() => setJustCopied(false), 2000);
   };
+
+  if (variant === 'icon') {
+    return (
+      <button
+        onClick={handleCopy}
+        disabled={justCopied}
+        className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50 print:hidden"
+        aria-label={justCopied ? 'Copiado' : 'Copiar WOD'}
+      >
+        {justCopied ? <CheckIcon /> : <ClipboardIcon />}
+      </button>
+    );
+  }
 
   return (
     <button

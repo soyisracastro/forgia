@@ -15,12 +15,14 @@ import WorkoutAnalysis from '@/components/WorkoutAnalysis';
 import TrainingIntelligenceCard from '@/components/TrainingIntelligenceCard';
 import LiveWorkoutOverlay from '@/components/live/LiveWorkoutOverlay';
 
-const DiceIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M8 8h.01"/><path d="M16 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
+// --- SVG Icons ---
+
+const BoltIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M13 3v7h6l-8 11v-7H5l8-11z"/></svg>
 );
 
-const NoteIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.855z"/></svg>
+const DiceIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M8 8h.01"/><path d="M16 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
 );
 
 const ClipboardCheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -31,6 +33,29 @@ const PlayIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="6 3 20 12 6 21 6 3"/></svg>
 );
 
+const BookmarkIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
+);
+
+const BookmarkCheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/><path d="m9 10 2 2 4-4"/></svg>
+);
+
+const LOADING_PHRASES = [
+  'Personalizando tu infierno diario...',
+  'Consultando con el dios de los burpees...',
+  'Calculando cuánto vas a sufrir hoy...',
+  'Preparando tu dosis de humildad...',
+  'La IA está eligiendo tus movimientos favoritos (los que odias)...',
+  'Generando excusas creativas para mañana...',
+  'Activando modo "no pain, no gain"...',
+  'Mezclando sudor, lágrimas y wall balls...',
+  'Preguntándole a ChatGPT si eres capaz...',
+  'Diseñando tu nueva relación amor-odio con el gimnasio...',
+  'Cargando el soundtrack perfecto para tus gemidos...',
+  'Invocando el espíritu de Rich Froning...',
+];
+
 export default function AppPage() {
   const { user } = useAuth();
   const [wod, setWod] = useState<Wod | null>(null);
@@ -39,13 +64,13 @@ export default function AppPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState('');
   const [sessionNotes, setSessionNotes] = useState('');
-  const [showNotes, setShowNotes] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [savedWodId, setSavedWodId] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
   const [savedFeedback, setSavedFeedback] = useState<WorkoutFeedback | null>(null);
   const [showLiveMode, setShowLiveMode] = useState(false);
   const [liveWorkoutTime, setLiveWorkoutTime] = useState<number | null>(null);
+  const [loadingPhraseIndex, setLoadingPhraseIndex] = useState(0);
 
   // Load latest saved WOD from Supabase on mount
   useEffect(() => {
@@ -98,6 +123,20 @@ export default function AppPage() {
     migrateLocalStorage();
   }, [user]);
 
+  // Rotate loading phrases every 2 seconds
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingPhraseIndex(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setLoadingPhraseIndex((prev) => (prev + 1) % LOADING_PHRASES.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
   const handleGenerate = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -144,9 +183,11 @@ export default function AppPage() {
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="text-center">
-          <h3 className="text-lg text-neutral-500 dark:text-neutral-400 mb-4">Personalizando tu infierno diario...</h3>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
           <Spinner />
+          <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-400 min-h-6 transition-opacity duration-300">
+            {LOADING_PHRASES[loadingPhraseIndex]}
+          </p>
         </div>
       );
     }
@@ -164,33 +205,6 @@ export default function AppPage() {
       return (
         <>
           <WodDisplay wod={wod} />
-          <div data-print-hide className="flex flex-wrap justify-center gap-3 mt-8">
-            <CopyWodButton wod={wod} />
-            <PrintWodButton />
-            <button
-              onClick={handleSaveWod}
-              disabled={justSaved || !!savedWodId}
-              className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-colors duration-200 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900 disabled:opacity-60"
-            >
-              {justSaved ? 'Guardado!' : savedWodId ? 'Guardado' : 'Guardar WOD'}
-            </button>
-            <button
-              onClick={() => setShowLiveMode(true)}
-              className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900"
-            >
-              <PlayIcon className="h-4 w-4" />
-              Iniciar Entrenamiento
-            </button>
-            {!savedFeedback && (
-              <button
-                onClick={() => setShowFeedback((prev) => !prev)}
-                className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-colors duration-200 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900"
-              >
-                <ClipboardCheckIcon className="h-4 w-4" />
-                {showFeedback ? 'Ocultar' : 'Registrar Resultado'}
-              </button>
-            )}
-          </div>
 
           {/* Feedback form */}
           {showFeedback && !savedFeedback && user && (
@@ -225,50 +239,89 @@ export default function AppPage() {
 
   return (
     <>
-      <div className="mb-2">
+      {/* Page header */}
+      <div className="mb-6">
         <h1 className="print-title text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">Tu Entrenamiento</h1>
         <p className="print-date text-neutral-500 dark:text-neutral-400 text-sm mt-1">{currentDate}</p>
       </div>
 
       <TrainingIntelligenceCard />
 
-      <div data-print-hide className="flex flex-col sm:flex-row justify-end sm:items-center mb-6 gap-4">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowNotes((prev) => !prev)}
-            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors duration-200 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900"
-          >
-            <NoteIcon className="h-4 w-4" />
-            {showNotes ? 'Ocultar notas' : 'Notas de sesión'}
-          </button>
-          <button
-            onClick={handleGenerate}
-            disabled={isLoading}
-            className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-400 dark:focus:ring-offset-neutral-900"
-          >
-            <DiceIcon className="h-4 w-4" />
-            {wod ? 'Generar Nuevo' : 'Generar WOD'}
-          </button>
-        </div>
+      {/* Session notes — always visible */}
+      <div data-print-hide className="mb-6">
+        <label htmlFor="sessionNotes" className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">
+          Notas de sesión <span className="font-normal text-neutral-400 dark:text-neutral-500">(opcional)</span>
+        </label>
+        <textarea
+          id="sessionNotes"
+          value={sessionNotes}
+          onChange={(e) => setSessionNotes(e.target.value)}
+          placeholder="Ej: Hoy quiero enfoque en gimnásticos, tengo 45 min..."
+          className="w-full px-4 py-3 text-sm rounded-xl border border-neutral-200 dark:border-neutral-700/60 bg-white dark:bg-neutral-800/50 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+          rows={3}
+        />
       </div>
 
-      {showNotes && (
-        <div data-print-hide className="mb-6 p-4 bg-neutral-100 dark:bg-neutral-800/50 rounded-lg border border-neutral-200 dark:border-neutral-700">
-          <label htmlFor="sessionNotes" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            Notas para esta sesión (opcional)
-          </label>
-          <textarea
-            id="sessionNotes"
-            value={sessionNotes}
-            onChange={(e) => setSessionNotes(e.target.value)}
-            placeholder="Ej: Hoy me duele la rodilla izquierda, quiero enfoque en gimnásticos..."
-            className="w-full px-3 py-2 text-sm rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 dark:placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
-            rows={2}
-          />
+      {/* Generate CTA — full width */}
+      <button
+        data-print-hide
+        onClick={handleGenerate}
+        disabled={isLoading}
+        className="w-full flex items-center justify-center gap-2 h-14 mb-8 text-base font-bold uppercase tracking-wider text-white bg-red-500 rounded-xl hover:bg-red-600 shadow-lg shadow-red-500/25 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-400 dark:focus:ring-offset-neutral-900"
+      >
+        <BoltIcon className="h-5 w-5" />
+        {wod ? 'Generar Nuevo' : 'Generar WOD'}
+      </button>
+
+      {/* Content area */}
+      <div className={wod && !showLiveMode ? 'pb-28' : ''}>
+        {renderContent()}
+      </div>
+
+      {/* Floating Action Bar */}
+      {wod && !showLiveMode && (
+        <div data-print-hide className="fixed bottom-0 left-0 right-0 z-40">
+          {/* Gradient fade */}
+          <div className="h-8 bg-linear-to-t from-white dark:from-[#0a0a0a] to-transparent" />
+          {/* Action bar */}
+          <div className="bg-white dark:bg-[#0a0a0a] border-t border-neutral-200 dark:border-neutral-800 px-4 pb-[env(safe-area-inset-bottom,0px)]">
+            <div className="container mx-auto max-w-4xl flex items-center justify-between py-3">
+              {/* Left: utility buttons */}
+              <div className="flex items-center gap-2">
+                <CopyWodButton wod={wod} variant="icon" />
+                <PrintWodButton variant="icon" />
+                <button
+                  onClick={handleSaveWod}
+                  disabled={justSaved || !!savedWodId}
+                  className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
+                  aria-label={justSaved ? 'Guardado' : savedWodId ? 'Guardado' : 'Guardar WOD'}
+                >
+                  {savedWodId ? <BookmarkCheckIcon className="h-4 w-4" /> : <BookmarkIcon className="h-4 w-4" />}
+                </button>
+              </div>
+              {/* Right: main actions */}
+              <div className="flex items-center gap-2">
+                {!savedFeedback && (
+                  <button
+                    onClick={() => setShowFeedback((prev) => !prev)}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg border-2 border-red-500 text-red-500 hover:bg-red-500/10 transition-colors"
+                  >
+                    <ClipboardCheckIcon className="h-4 w-4" />
+                    Registrar
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowLiveMode(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 shadow-lg shadow-red-500/25 transition-colors"
+                >
+                  <PlayIcon className="h-4 w-4" />
+                  Iniciar Entrenamiento
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
-
-      {renderContent()}
 
       {showLiveMode && wod && (
         <LiveWorkoutOverlay
