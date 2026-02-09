@@ -93,14 +93,12 @@ export default function HistoriaPage() {
         </div>
       ) : (
         <>
-          <div data-print-hide className="flex justify-center mb-6">
-            <div className="w-full max-w-xs">
-              <SegmentedButton
-                options={['Lista', 'Calendario']}
-                selected={viewMode}
-                onSelect={(v) => setViewMode(v as ViewMode)}
-              />
-            </div>
+          <div data-print-hide className="mb-6">
+            <SegmentedButton
+              options={['Lista', 'Calendario']}
+              selected={viewMode}
+              onSelect={(v) => setViewMode(v as ViewMode)}
+            />
           </div>
 
           {viewMode === 'Lista' ? (

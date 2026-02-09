@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import type { SavedWod, WorkoutFeedback, GeminiAnalysis } from '@/types/wod';
-import { groupWodsByDate, getCalendarDays, dateToKey, formatMonthYear, formatFullDate, DAY_NAMES_SHORT } from '@/lib/dateUtils';
+import { groupWodsByDate, getCalendarDays, dateToKey, formatMonthYear, DAY_NAMES_SHORT } from '@/lib/dateUtils';
 import WodDisplay from '@/components/WodDisplay';
 import CopyWodButton from '@/components/CopyWodButton';
 import PrintWodButton from '@/components/PrintWodButton';
@@ -19,10 +19,44 @@ interface CalendarViewProps {
   onAnalysisComplete: (wodId: string, analysis: GeminiAnalysis) => void;
 }
 
-function formatTime(iso: string) {
-  return new Intl.DateTimeFormat('es-ES', {
-    timeStyle: 'short',
-  }).format(new Date(iso));
+// --- SVG Icons ---
+
+const FireIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0">
+    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+  </svg>
+);
+
+// --- Helpers ---
+
+function formatDateUppercase(dateKey: string): string {
+  const [year, month, day] = dateKey.split('-').map(Number);
+  const d = new Date(year, month - 1, day);
+  const formatted = new Intl.DateTimeFormat('es-ES', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(d);
+  return formatted.toUpperCase();
+}
+
+function getMetconSummary(wod: SavedWod['wod']): string {
+  const type = wod.metcon.type || '';
+  const duration = wod.metcon.duration || '';
+  if (type && duration) {
+    const numMatch = duration.match(/(\d+)/);
+    return numMatch ? `${type} ${numMatch[1]}` : type;
+  }
+  return type || 'WOD';
+}
+
+function getMovementsSummary(wod: SavedWod['wod']): string {
+  const movements = wod.metcon.movements || wod.metcon.parts || wod.metcon.details || [];
+  if (movements.length === 0) return '';
+  return movements.slice(0, 2).map(m => {
+    const match = m.match(/^\d+[\s\w]*?\s+(.+)$/);
+    return match ? match[1] : m;
+  }).join(', ');
 }
 
 export default function CalendarView({
@@ -37,6 +71,8 @@ export default function CalendarView({
   const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
+  const [showWodDetail, setShowWodDetail] = useState<string | null>(null);
+  const [showAnalysis, setShowAnalysis] = useState<string | null>(null);
 
   const wodsByDate = useMemo(() => groupWodsByDate(savedWods), [savedWods]);
   const calendarDays = useMemo(() => getCalendarDays(currentYear, currentMonth), [currentYear, currentMonth]);
@@ -108,7 +144,7 @@ export default function CalendarView({
       {/* Day names header */}
       <div className="grid grid-cols-7 gap-1">
         {DAY_NAMES_SHORT.map((name) => (
-          <div key={name} className="text-center text-xs font-semibold text-neutral-500 dark:text-neutral-400 py-1">
+          <div key={name} className="text-center text-xs font-semibold text-neutral-500 dark:text-neutral-400 py-1 uppercase">
             {name}
           </div>
         ))}
@@ -134,7 +170,7 @@ export default function CalendarView({
                 text-sm transition-colors duration-150
                 ${!dayInfo.isCurrentMonth ? 'text-neutral-300 dark:text-neutral-600' : ''}
                 ${dayInfo.isCurrentMonth && !hasWods ? 'text-neutral-500 dark:text-neutral-400 cursor-default' : ''}
-                ${hasWods ? 'cursor-pointer font-semibold text-neutral-900 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800/50' : ''}
+                ${hasWods ? 'cursor-pointer font-bold text-neutral-900 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800/50' : ''}
                 ${isSelected ? 'bg-red-500/10 dark:bg-red-500/20 ring-2 ring-red-500' : ''}
                 ${isToday && !isSelected ? 'bg-neutral-100 dark:bg-neutral-800/50' : ''}
               `}
@@ -163,60 +199,102 @@ export default function CalendarView({
         {wodsInMonth} {wodsInMonth === 1 ? 'entrenamiento' : 'entrenamientos'} este mes
       </p>
 
+      {/* Legend */}
+      <div className="flex items-center justify-center gap-6 text-xs text-neutral-500 dark:text-neutral-400">
+        <div className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-red-500" />
+          <span>WOD guardado</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="size-2 rounded-full bg-emerald-500" />
+          <span>Con feedback</span>
+        </div>
+      </div>
+
       {/* Day detail panel */}
       {selectedDateKey && selectedDayWods.length > 0 && (
-        <div className="animate-fade-in-up space-y-3">
-          <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
-            {formatFullDate(selectedDateKey)}
-          </h3>
+        <div className="animate-fade-in-up space-y-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
+          {/* Date header */}
+          <p className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+            {formatDateUppercase(selectedDateKey)}
+          </p>
 
-          {selectedDayWods.map((saved) => {
+          {selectedDayWods.map((saved, wodIdx) => {
             const feedback = feedbackMap[saved.id];
             const hasFb = feedback !== undefined && feedback !== null;
+            const metconSummary = getMetconSummary(saved.wod);
+            const movementsSummary = getMovementsSummary(saved.wod);
 
             return (
-              <div
-                key={saved.id}
-                className="border border-neutral-200 dark:border-neutral-700 rounded-xl overflow-hidden"
-              >
-                <button
-                  onClick={() => onExpand(saved.id)}
-                  className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    {hasFb && (
-                      <span className="shrink-0 w-2.5 h-2.5 rounded-full bg-emerald-500" title="Tiene resultado registrado" />
+              <div key={saved.id} className="space-y-4">
+                {/* WOD title */}
+                <h3 className="text-2xl font-bold text-neutral-900 dark:text-white">
+                  {saved.wod.title}
+                </h3>
+
+                {/* Metcon info line */}
+                <div className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
+                  <FireIcon />
+                  <span className="font-medium">{metconSummary}</span>
+                  {movementsSummary && (
+                    <>
+                      <span>&middot;</span>
+                      <span>{movementsSummary}</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Feedback stats inline */}
+                {hasFb && (
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
+                    <span>Dificultad: <strong className="text-neutral-900 dark:text-white">{feedback.difficulty_rating}/10</strong></span>
+                    <span>&middot;</span>
+                    <span className="font-medium text-neutral-900 dark:text-white bg-neutral-200 dark:bg-neutral-800 px-1.5 py-0.5 rounded text-xs">
+                      {feedback.rx_or_scaled}
+                    </span>
+                    {feedback.total_time_minutes && (
+                      <>
+                        <span>&middot;</span>
+                        <span>{feedback.total_time_minutes} min</span>
+                      </>
                     )}
-                    <div>
-                      <h4 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">{saved.wod.title}</h4>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                        {formatTime(saved.created_at)}
-                        {hasFb && (
-                          <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">
-                            {feedback.difficulty_rating}/10 &middot; {feedback.rx_or_scaled}
-                            {feedback.total_time_minutes ? ` \u00b7 ${feedback.total_time_minutes}min` : ''}
-                          </span>
-                        )}
-                      </p>
-                    </div>
                   </div>
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className={`text-neutral-400 transition-transform duration-200 ${expandedId === saved.id ? 'rotate-180' : ''}`}
+                )}
+
+                {/* Action buttons */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => {
+                      onExpand(saved.id);
+                      setShowWodDetail(showWodDetail === saved.id ? null : saved.id);
+                    }}
+                    className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-sm font-semibold transition-colors"
                   >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </button>
-                {expandedId === saved.id && (
-                  <div className="px-6 pb-6 border-t border-neutral-200 dark:border-neutral-700 pt-6">
+                    Ver WOD completo
+                  </button>
+                  {hasFb ? (
+                    <button
+                      onClick={() => {
+                        onExpand(saved.id);
+                        setShowAnalysis(showAnalysis === saved.id ? null : saved.id);
+                      }}
+                      className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors shadow-lg shadow-red-500/20"
+                    >
+                      Ver Análisis
+                    </button>
+                  ) : (
+                    <button
+                      disabled
+                      className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-neutral-200 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 text-sm font-semibold cursor-not-allowed"
+                    >
+                      Sin feedback
+                    </button>
+                  )}
+                </div>
+
+                {/* Expanded WOD detail */}
+                {showWodDetail === saved.id && expandedId === saved.id && (
+                  <div className="animate-fade-in-up border-t border-neutral-200 dark:border-neutral-700 pt-4">
                     <WodDisplay wod={saved.wod} />
                     <div className="flex flex-wrap justify-center items-center gap-3 mt-6">
                       <CopyWodButton wod={saved.wod} />
@@ -225,37 +303,32 @@ export default function CalendarView({
                         onClick={() => onDelete(saved.id)}
                         className="text-sm text-red-500 hover:text-red-600 font-medium transition-colors"
                       >
-                        Eliminar de historia
+                        Eliminar
                       </button>
                     </div>
-
-                    {loadingFeedback[saved.id] && (
-                      <div className="mt-4 flex justify-center">
-                        <Spinner />
-                      </div>
-                    )}
-
-                    {hasFb && (
-                      <div className="mt-6 p-4 bg-neutral-100 dark:bg-neutral-800/50 rounded-xl border border-neutral-200 dark:border-neutral-700">
-                        <h4 className="text-sm font-semibold text-neutral-700 dark:text-neutral-300 mb-3">Resultado Registrado</h4>
-                        <div className="flex flex-wrap gap-4 text-sm text-neutral-600 dark:text-neutral-400">
-                          <span>Dificultad: <strong className="text-neutral-800 dark:text-neutral-200">{feedback.difficulty_rating}/10</strong></span>
-                          <span>Modalidad: <strong className="text-neutral-800 dark:text-neutral-200">{feedback.rx_or_scaled}</strong></span>
-                          {feedback.total_time_minutes && (
-                            <span>Tiempo: <strong className="text-neutral-800 dark:text-neutral-200">{feedback.total_time_minutes} min</strong></span>
-                          )}
-                        </div>
-                        {feedback.notes && (
-                          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400 italic">&ldquo;{feedback.notes}&rdquo;</p>
-                        )}
-
-                        <WorkoutAnalysis
-                          feedback={feedback}
-                          onAnalysisComplete={(analysis) => onAnalysisComplete(saved.id, analysis)}
-                        />
-                      </div>
-                    )}
                   </div>
+                )}
+
+                {/* Expanded Analysis */}
+                {showAnalysis === saved.id && expandedId === saved.id && hasFb && (
+                  <div className="animate-fade-in-up">
+                    <WorkoutAnalysis
+                      feedback={feedback}
+                      onAnalysisComplete={(analysis) => onAnalysisComplete(saved.id, analysis)}
+                    />
+                  </div>
+                )}
+
+                {/* Loading feedback */}
+                {loadingFeedback[saved.id] && (
+                  <div className="flex justify-center py-2">
+                    <Spinner />
+                  </div>
+                )}
+
+                {/* Separator between multiple WODs on same day */}
+                {wodIdx < selectedDayWods.length - 1 && (
+                  <div className="border-t border-neutral-200 dark:border-neutral-700" />
                 )}
               </div>
             );
