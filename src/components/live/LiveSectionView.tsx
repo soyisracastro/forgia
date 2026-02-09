@@ -1,71 +1,42 @@
 import type { WodSection } from '@/types/wod';
 
-type SectionType = 'warmUp' | 'strengthSkill' | 'metcon' | 'coolDown';
-
 interface LiveSectionViewProps {
   section: WodSection;
-  sectionType: SectionType;
 }
 
-const titleColorMap: Record<SectionType, string> = {
-  warmUp: 'text-amber-400',
-  strengthSkill: 'text-blue-400',
-  metcon: 'text-red-400',
-  coolDown: 'text-emerald-400',
-};
-
-const badgeBgMap: Record<SectionType, string> = {
-  warmUp: 'bg-amber-500/20 text-amber-300',
-  strengthSkill: 'bg-blue-500/20 text-blue-300',
-  metcon: 'bg-red-500/20 text-red-300',
-  coolDown: 'bg-emerald-500/20 text-emerald-300',
-};
-
-const LiveSectionView: React.FC<LiveSectionViewProps> = ({ section, sectionType }) => {
+const LiveSectionView: React.FC<LiveSectionViewProps> = ({ section }) => {
   const items = section.movements || section.parts || section.details || [];
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      {/* Section title */}
-      <h2 className={`text-lg font-bold text-center mb-3 ${titleColorMap[sectionType]}`}>
-        {section.title}
-      </h2>
+    <div className="w-full max-w-md mx-auto bg-neutral-900 rounded-3xl border border-white/5 shadow-2xl relative overflow-hidden">
+      {/* Subtle background gradient */}
+      <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent pointer-events-none" />
 
-      {/* Type badge for metcon */}
-      {section.type && (
-        <div className="flex justify-center mb-3">
-          <span className={`px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${badgeBgMap[sectionType]}`}>
-            {section.type}
+      {/* Scrollable content area */}
+      <div className="relative z-10 max-h-[40vh] overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+        <div className="flex flex-col gap-4">
+          {/* Movements list with dot indicators */}
+          {items.map((item, i) => (
+            <div key={i}>
+              <div className="flex items-center gap-4">
+                <div className={`size-2 rounded-full shrink-0 ${i === 0 ? 'bg-red-500/80' : 'bg-white/20'}`} />
+                <span className="text-white text-xl font-medium">{item}</span>
+              </div>
+              {i < items.length - 1 && (
+                <div className="h-px w-full bg-white/5 mt-4" />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Notes / Scaling info */}
+      {section.notes && (
+        <div className="relative z-10 px-6 pb-4 flex justify-center">
+          <span className="text-white/30 text-xs font-medium bg-white/5 px-3 py-2 rounded-lg">
+            {section.notes}
           </span>
         </div>
-      )}
-
-      {/* Description */}
-      {section.description && (
-        <p className="text-sm text-center text-neutral-400 mb-4">{section.description}</p>
-      )}
-
-      {/* Movements list */}
-      {items.length > 0 && (
-        <div className="max-h-[30vh] overflow-y-auto px-2 scrollbar-thin">
-          <ul className="space-y-2">
-            {items.map((item, i) => (
-              <li key={i} className="flex items-start gap-3">
-                <span className="shrink-0 w-6 text-right text-sm font-semibold text-neutral-500">
-                  {i + 1}.
-                </span>
-                <span className="text-neutral-200 text-sm">{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {/* Notes */}
-      {section.notes && (
-        <p className="mt-4 text-xs italic text-neutral-500 text-center">
-          {section.notes}
-        </p>
       )}
     </div>
   );
