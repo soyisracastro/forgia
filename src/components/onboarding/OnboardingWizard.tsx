@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
 import type { ExperienceLevel, Objective, TrainingType, EquipmentLevel } from '@/types/profile';
+import { ArrowRight } from 'lucide-react';
 import StepIndicator from './StepIndicator';
 import Step1BasicInfo from './Step1BasicInfo';
 import Step2Objectives from './Step2Objectives';
@@ -158,7 +159,7 @@ export default function OnboardingWizard() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <StepIndicator currentStep={currentStep} />
+      <StepIndicator currentStep={currentStep} onBack={handlePrev} />
 
       <div className="min-h-[320px]">
         {renderStep()}
@@ -170,27 +171,16 @@ export default function OnboardingWizard() {
         </div>
       )}
 
-      <div className="flex justify-between mt-8 pt-6 border-t border-neutral-200 dark:border-neutral-700">
-        {currentStep > 1 ? (
-          <button
-            type="button"
-            onClick={handlePrev}
-            className="px-6 py-2.5 text-sm font-semibold rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-          >
-            Anterior
-          </button>
-        ) : (
-          <div />
-        )}
-
+      <div className="flex justify-end mt-8 pt-6 border-t border-neutral-200 dark:border-neutral-700">
         {currentStep < 4 ? (
           <button
             type="button"
             onClick={handleNext}
             disabled={!isStepValid(currentStep)}
-            className="px-6 py-2.5 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors disabled:bg-red-300 dark:disabled:bg-red-500/30 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors disabled:bg-red-300 dark:disabled:bg-red-500/30 disabled:cursor-not-allowed"
           >
             Siguiente
+            <ArrowRight className="w-4 h-4" />
           </button>
         ) : (
           <button
