@@ -8,7 +8,23 @@ const PrinterIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export default function PrintWodButton() {
+interface PrintWodButtonProps {
+  variant?: 'default' | 'icon';
+}
+
+export default function PrintWodButton({ variant = 'default' }: PrintWodButtonProps) {
+  if (variant === 'icon') {
+    return (
+      <button
+        onClick={() => window.print()}
+        className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors print:hidden"
+        aria-label="Imprimir"
+      >
+        <PrinterIcon />
+      </button>
+    );
+  }
+
   return (
     <button
       onClick={() => window.print()}
