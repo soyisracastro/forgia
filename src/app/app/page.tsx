@@ -304,18 +304,18 @@ export default function AppPage() {
                 {!savedFeedback && (
                   <button
                     onClick={() => setShowFeedback((prev) => !prev)}
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg border-2 border-red-500 text-red-500 hover:bg-red-500/10 transition-colors"
+                    className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-semibold rounded-lg border-2 border-red-500 text-red-500 hover:bg-red-500/10 transition-colors"
                   >
                     <ClipboardCheckIcon className="h-4 w-4" />
-                    Registrar
+                    <span className="hidden sm:inline">Registrar</span>
                   </button>
                 )}
                 <button
                   onClick={() => setShowLiveMode(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 shadow-lg shadow-red-500/25 transition-colors"
+                  className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 shadow-lg shadow-red-500/25 transition-colors"
                 >
                   <PlayIcon className="h-4 w-4" />
-                  Iniciar Entrenamiento
+                  <span className="hidden sm:inline">Iniciar Entrenamiento</span>
                 </button>
               </div>
             </div>
