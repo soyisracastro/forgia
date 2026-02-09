@@ -16,16 +16,16 @@ const SECTION_ORDER: SectionKey[] = ['warmUp', 'strengthSkill', 'metcon', 'coolD
 
 const SECTION_LABELS: Record<SectionKey, string> = {
   warmUp: 'Calentamiento',
-  strengthSkill: 'Fuerza / Skill',
+  strengthSkill: 'Fuerza',
   metcon: 'Metcon',
-  coolDown: 'Vuelta a la calma',
+  coolDown: 'Vuelta a la Calma',
 };
 
-const PHASE_COLORS: Record<SectionKey, string> = {
-  warmUp: 'bg-amber-500',
-  strengthSkill: 'bg-blue-500',
-  metcon: 'bg-red-500',
-  coolDown: 'bg-emerald-500',
+const SECTION_EMOJIS: Record<SectionKey, string> = {
+  warmUp: '🔥',
+  strengthSkill: '🏋️',
+  metcon: '⚡',
+  coolDown: '💚',
 };
 
 const SESSION_STORAGE_KEY = 'live-workout-state';
@@ -41,10 +41,8 @@ interface LiveWorkoutOverlayProps {
 
 function parseMinutes(text?: string): number | null {
   if (!text) return null;
-  // Match patterns like "12 min", "10-15 min", "20 minutos"
   const match = text.match(/(\d+)(?:\s*[-–]\s*\d+)?\s*min/i);
   if (match) return parseInt(match[1], 10);
-  // Standalone number (e.g., in EMOM "cada minuto por 12 minutos")
   const standalone = text.match(/(\d+)/);
   return standalone ? parseInt(standalone[1], 10) : null;
 }
@@ -82,22 +80,39 @@ function getTimerConfig(key: SectionKey, section: WodSection): TimerConfig {
   return { mode: 'stopwatch' };
 }
 
+function getTotalDurationSeconds(config: TimerConfig): number | null {
+  switch (config.mode) {
+    case 'countdown':
+      return config.durationSeconds ?? null;
+    case 'emom':
+      return (config.durationSeconds ?? 60) * (config.totalRounds ?? 1);
+    case 'tabata':
+      return ((config.workSeconds ?? 20) + (config.restSeconds ?? 10)) * (config.totalRounds ?? 8);
+    default:
+      return null;
+  }
+}
+
 // --- Icons ---
 
 const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
 );
 
 const PauseIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>
 );
 
 const PlayIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="6 3 20 12 6 21 6 3"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="6 3 20 12 6 21 6 3"/></svg>
 );
 
 const SkipIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
+);
+
+const FlagIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
 );
 
 const VolumeIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -106,10 +121,6 @@ const VolumeIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 const VolumeOffIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></svg>
-);
-
-const StopIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
 );
 
 // --- Component ---
@@ -139,7 +150,6 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
 
   // --- Timer callbacks ---
   const handleTick = useCallback((state: TimerState) => {
-    // Countdown beeps for last 3 seconds
     if (timerConfig.mode !== 'stopwatch' && state.displaySeconds <= 3 && state.displaySeconds > 0) {
       playBeep('tick');
     }
@@ -150,14 +160,12 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
   }, [playBeep]);
 
   const advancePhase = useCallback(() => {
-    // Record time for current section
     if (currentSectionKey) {
       const elapsed = Math.floor((Date.now() - sectionStartRef.current) / 1000);
       setSectionTimes((prev) => ({ ...prev, [currentSectionKey]: elapsed }));
     }
 
     if (phase === 'countdown') {
-      // Start workout
       totalStartRef.current = Date.now();
       sectionStartRef.current = Date.now();
       setPhase('warmUp');
@@ -167,7 +175,6 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
         sectionStartRef.current = Date.now();
         setPhase(SECTION_ORDER[idx + 1]);
       } else {
-        // Freeze total time before entering summary
         setFinalTotalSeconds(Math.floor((Date.now() - totalStartRef.current) / 1000));
         setPhase('summary');
       }
@@ -176,8 +183,6 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
 
   const handleTimerFinish = useCallback(() => {
     playBeep('finish');
-    // Auto-advance after timed sections finish
-    // Small delay so the user can see the 00:00
     setTimeout(advancePhase, 1500);
   }, [playBeep, advancePhase]);
 
@@ -188,10 +193,16 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
     onFinish: handleTimerFinish,
   });
 
+  // --- Progress percent ---
+  const progressPercent = useMemo(() => {
+    const totalDuration = getTotalDurationSeconds(timerConfig);
+    if (totalDuration === null || totalDuration === 0) return undefined;
+    return ((timer.elapsedSeconds) / totalDuration) * 100;
+  }, [timerConfig, timer.elapsedSeconds]);
+
   // --- Phase transitions: auto-start timer ---
   useEffect(() => {
     timer.reset();
-    // Small delay for visual transition
     const id = setTimeout(() => timer.start(), 200);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -211,7 +222,6 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
 
   // --- Session storage recovery ---
   useEffect(() => {
-    // Save state periodically
     const interval = setInterval(() => {
       if (phase !== 'summary' && phase !== 'countdown') {
         sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({
@@ -227,7 +237,6 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
     return () => clearInterval(interval);
   }, [phase, sectionTimes, wod.title]);
 
-  // Check for recovery on mount
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
@@ -256,10 +265,8 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Cleanup storage on unmount if finished/cancelled
   useEffect(() => {
     return () => {
-      // Only clean if we're leaving
       if (phase === 'summary') {
         sessionStorage.removeItem(SESSION_STORAGE_KEY);
       }
@@ -286,7 +293,6 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
 
   const handleForTimeFinish = () => {
     timer.finish();
-    // Record time and advance
     if (currentSectionKey) {
       const elapsed = Math.floor((Date.now() - sectionStartRef.current) / 1000);
       setSectionTimes((prev) => ({ ...prev, [currentSectionKey]: elapsed }));
@@ -299,6 +305,14 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
     } else {
       setFinalTotalSeconds(Math.floor((Date.now() - totalStartRef.current) / 1000));
       setPhase('summary');
+    }
+  };
+
+  const handleFinishButton = () => {
+    if (isForTime) {
+      handleForTimeFinish();
+    } else {
+      handleSkip();
     }
   };
 
@@ -317,22 +331,54 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
     onCancel();
   };
 
+  // --- Footer status text ---
+  const getFooterStatus = (): string => {
+    if (timerConfig.mode === 'emom' && timer.currentRound && timer.totalRounds) {
+      return `Ronda ${timer.currentRound} de ${timer.totalRounds}`;
+    }
+    if (timerConfig.mode === 'tabata' && timer.currentRound && timer.totalRounds) {
+      return `Ronda ${timer.currentRound} de ${timer.totalRounds} · ${timer.phase === 'work' ? 'Trabajo' : 'Descanso'}`;
+    }
+    if (timerConfig.mode === 'stopwatch') {
+      return 'Cronómetro en curso';
+    }
+    if (timerConfig.mode === 'countdown') {
+      return 'Tiempo restante';
+    }
+    return SECTION_LABELS[phase as SectionKey] ?? '';
+  };
+
+  // --- Section subtitle (type + duration) ---
+  const getSectionSubtitle = (): string | null => {
+    if (!currentSection) return null;
+    const parts: string[] = [];
+    if (currentSection.type) parts.push(currentSection.type);
+    if (currentSection.duration) parts.push(currentSection.duration);
+    if (parts.length > 0) return parts.join(' ').toUpperCase();
+    const suggested = getSuggestedDuration(currentSection);
+    return suggested ? suggested.toUpperCase() : null;
+  };
+
   // --- Countdown phase (3-2-1 GO) ---
   if (phase === 'countdown') {
     const display = timer.displaySeconds;
     return (
       <div className="fixed inset-0 z-50 bg-neutral-950 flex flex-col items-center justify-center">
         {/* Top bar */}
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3">
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 pt-6">
           <span className="text-sm font-medium text-neutral-500">{wod.title}</span>
-          <button onClick={handleClose} className="p-2 text-neutral-400 hover:text-white transition-colors">
-            <XIcon className="h-6 w-6" />
+          <button
+            onClick={handleClose}
+            className="size-10 rounded-full bg-white/5 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white transition-colors"
+          >
+            <XIcon />
           </button>
         </div>
 
-        <div className="text-8xl sm:text-9xl font-mono font-bold text-white animate-timer-pulse">
+        <div className="text-8xl sm:text-9xl font-mono font-bold text-white animate-timer-pulse timer-glow">
           {display > 0 ? display : 'GO'}
         </div>
+        <p className="mt-4 text-neutral-500 text-sm">{wod.title}</p>
       </div>
     );
   }
@@ -353,48 +399,63 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
   }
 
   // --- Active section phase ---
-  const sectionIndex = SECTION_ORDER.indexOf(phase as SectionKey);
-
   return (
     <div className="fixed inset-0 z-50 bg-neutral-950 flex flex-col">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3 shrink-0">
-        <div className="flex items-center gap-3">
-          {/* Section indicator dots */}
-          <div className="flex gap-1.5">
-            {SECTION_ORDER.map((key, i) => (
-              <div
+      <header className="flex items-center justify-between p-4 pt-6 z-10 shrink-0">
+        {/* Close button */}
+        <button
+          onClick={handleClose}
+          className="size-10 rounded-full bg-white/5 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white transition-colors"
+          aria-label="Cerrar"
+        >
+          <XIcon />
+        </button>
+
+        {/* Phase pills */}
+        <div className="flex-1 mx-4 overflow-hidden">
+          <div className="flex items-center justify-center gap-1.5 overflow-x-auto whitespace-nowrap no-scrollbar">
+            {SECTION_ORDER.map((key) => (
+              <span
                 key={key}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  i <= sectionIndex ? PHASE_COLORS[key] : 'bg-neutral-700'
-                }`}
-              />
+                className={
+                  key === phase
+                    ? 'bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-[0_0_12px_rgba(239,67,67,0.4)]'
+                    : 'text-white/40 text-xs font-medium px-2 py-1 rounded-full border border-transparent'
+                }
+              >
+                {SECTION_LABELS[key]}
+              </span>
             ))}
           </div>
-          <span className="text-sm font-medium text-neutral-400">
-            {SECTION_LABELS[phase as SectionKey]}
-          </span>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={toggleMute}
-            className="p-2 text-neutral-400 hover:text-white transition-colors"
-            aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
-          >
-            {isMuted ? <VolumeOffIcon /> : <VolumeIcon />}
-          </button>
-          <button
-            onClick={handleClose}
-            className="p-2 text-neutral-400 hover:text-white transition-colors"
-            aria-label="Cerrar"
-          >
-            <XIcon className="h-6 w-6" />
-          </button>
-        </div>
-      </div>
+
+        {/* Volume button */}
+        <button
+          onClick={toggleMute}
+          className="size-10 rounded-full bg-white/5 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white transition-colors"
+          aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
+        >
+          {isMuted ? <VolumeOffIcon /> : <VolumeIcon />}
+        </button>
+      </header>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6 overflow-hidden">
+      <main className="flex-1 flex flex-col items-center justify-between px-6 pb-8 pt-2 overflow-hidden">
+        {/* Workout header */}
+        <div className="text-center w-full space-y-1">
+          <h1 className="text-red-500 text-2xl sm:text-[32px] font-bold tracking-tight leading-tight flex items-center justify-center gap-2">
+            <span className="text-2xl animate-pulse">{SECTION_EMOJIS[phase as SectionKey]}</span>
+            {SECTION_LABELS[phase as SectionKey]}: {currentSection?.title}
+          </h1>
+          {getSectionSubtitle() && (
+            <p className="text-white/60 text-sm font-medium tracking-wide uppercase">
+              {getSectionSubtitle()}
+            </p>
+          )}
+        </div>
+
+        {/* Hero Timer */}
         <LiveTimerDisplay
           seconds={timer.displaySeconds}
           mode={timerConfig.mode}
@@ -403,55 +464,61 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
           currentRound={timer.currentRound}
           totalRounds={timer.totalRounds}
           suggestedDuration={currentSection ? getSuggestedDuration(currentSection) : null}
+          progressPercent={progressPercent}
         />
 
-        {currentSection && currentSectionKey && (
-          <LiveSectionView
-            section={currentSection}
-            sectionType={currentSectionKey}
-          />
+        {/* Exercise card */}
+        {currentSection && (
+          <LiveSectionView section={currentSection} />
         )}
-      </div>
+      </main>
 
-      {/* Bottom controls */}
-      <div className="flex items-center justify-center gap-4 px-6 py-6 shrink-0">
-        {/* Pause/Resume */}
-        <button
-          onClick={timer.isRunning ? timer.pause : timer.resume}
-          className="flex items-center gap-2 px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white font-semibold rounded-lg transition-colors"
-        >
-          {timer.isRunning ? (
-            <>
-              <PauseIcon className="h-5 w-5" />
-              Pausar
-            </>
-          ) : (
-            <>
-              <PlayIcon className="h-5 w-5" />
-              Reanudar
-            </>
-          )}
-        </button>
-
-        {/* For Time: Finish button */}
-        {isForTime && (
+      {/* Controls & Footer */}
+      <div className="w-full flex flex-col items-center gap-6 px-6 pb-8 shrink-0">
+        {/* Control buttons */}
+        <div className="flex items-center justify-between w-full max-w-[320px]">
+          {/* Skip */}
           <button
-            onClick={handleForTimeFinish}
-            className="flex items-center gap-2 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
+            onClick={handleSkip}
+            className="group flex flex-col items-center gap-1 active:scale-95 transition-transform"
           >
-            <StopIcon className="h-5 w-5" />
-            Terminar
+            <div className="size-14 rounded-full bg-neutral-800 border border-white/10 flex items-center justify-center text-white hover:bg-neutral-700 transition-colors">
+              <SkipIcon />
+            </div>
+            <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider group-hover:text-white/60">Sig.</span>
           </button>
-        )}
 
-        {/* Skip to next */}
-        <button
-          onClick={handleSkip}
-          className="flex items-center gap-2 px-6 py-3 border border-neutral-600 hover:bg-neutral-800 text-neutral-300 font-semibold rounded-lg transition-colors"
-        >
-          <SkipIcon className="h-5 w-5" />
-          Siguiente
-        </button>
+          {/* Pause / Resume */}
+          <button
+            onClick={timer.isRunning ? timer.pause : timer.resume}
+            className="group flex flex-col items-center gap-1 active:scale-95 transition-transform"
+          >
+            <div className="size-20 rounded-full bg-neutral-800 border-2 border-white/10 flex items-center justify-center text-white shadow-lg hover:bg-neutral-700 hover:border-white/20 transition-all">
+              {timer.isRunning ? <PauseIcon /> : <PlayIcon />}
+            </div>
+            <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider group-hover:text-white/60">
+              {timer.isRunning ? 'Pausa' : 'Play'}
+            </span>
+          </button>
+
+          {/* Finish */}
+          <button
+            onClick={handleFinishButton}
+            className="group flex flex-col items-center gap-1 active:scale-95 transition-transform"
+          >
+            <div className="size-14 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white hover:border-transparent transition-all shadow-[0_0_15px_rgba(239,67,67,0.15)]">
+              <FlagIcon />
+            </div>
+            <span className="text-[10px] font-medium text-red-500/60 uppercase tracking-wider group-hover:text-red-500">Fin</span>
+          </button>
+        </div>
+
+        {/* Footer status */}
+        <div className="text-center">
+          <p className="text-white/40 text-sm font-medium tracking-wide">
+            {getFooterStatus()}
+          </p>
+        </div>
       </div>
     </div>
   );

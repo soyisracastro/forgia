@@ -45,6 +45,10 @@ html {
   }
 }
 
+.timer-glow {
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
 @keyframes timer-pulse {
   0%,
   100% {
