@@ -12,6 +12,7 @@ export default function AppHeader() {
   const navLinks = [
     { href: '/app', label: 'WOD' },
     { href: '/app/historia', label: 'Historia' },
+    { href: '/app/perfil', label: 'Perfil' },
   ];
 
   return (
@@ -40,9 +41,12 @@ export default function AppHeader() {
           </div>
           <div className="flex items-center gap-3">
             {profile && (
-              <span className="hidden sm:inline text-sm text-neutral-500 dark:text-neutral-400">
+              <Link
+                href="/app/perfil"
+                className="hidden sm:inline text-sm text-neutral-500 dark:text-neutral-400 hover:text-red-500 transition-colors"
+              >
                 {profile.display_name || profile.email}
-              </span>
+              </Link>
             )}
             <ThemeToggle />
             <button

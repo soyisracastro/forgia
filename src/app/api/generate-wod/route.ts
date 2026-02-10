@@ -97,6 +97,19 @@ PERFIL DEL ATLETA:
 
 function buildLevelDirectives(profile: Profile): string {
   switch (profile.experience_level) {
+    case 'Novato':
+      return `NIVEL NOVATO (sin experiencia previa en entrenamiento funcional):
+- SOLO movimientos básicos universalmente conocidos: sentadillas (air squats), lagartijas (push-ups), zancadas (lunges), plancha (plank), jumping jacks, correr en el sitio.
+- NO usar terminología específica de CrossFit sin explicar qué significa y cómo se ejecuta.
+- CERO movimientos con barra, kettlebell pesada o equipamiento complejo.
+- El metcon debe ser MUY CORTO: 5-8 minutos máximo.
+- Incluir descansos generosos entre ejercicios (30-60 segundos).
+- CADA movimiento debe incluir una breve descripción de cómo ejecutarlo correctamente.
+- Enfocarse en construir patrones de movimiento fundamentales y acondicionamiento base.
+- Repeticiones bajas y manejables (5-8 por movimiento).
+- El calentamiento debe ser especialmente detallado, gradual y explicativo.
+- Pesos: SOLO peso corporal. No incluir peso externo.
+- Priorizar la confianza del atleta: movimientos que pueda hacer bien desde el primer intento.`;
     case 'Principiante':
       return `NIVEL PRINCIPIANTE:
 - Priorizar movimientos fundamentales y mecánica correcta.

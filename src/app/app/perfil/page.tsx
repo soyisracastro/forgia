@@ -1,0 +1,520 @@
+'use client';
+
+import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { updateProfile } from '@/lib/profiles';
+import {
+  EXPERIENCE_LEVELS,
+  OBJECTIVES,
+  INCOMPATIBLE_OBJECTIVES,
+  TRAINING_OPTIONS,
+  CROSSFIT_EQUIPMENT_OPTIONS,
+  CALISTENIA_EQUIPMENT_OPTIONS,
+} from '@/lib/training-constants';
+import type { ExperienceLevel, Objective, TrainingType, EquipmentLevel } from '@/types/profile';
+import {
+  User,
+  Mail,
+  Calendar,
+  Info,
+  Circle,
+  CircleDot,
+  CircleCheck,
+  Square,
+  Save,
+  Loader2,
+  Check,
+} from 'lucide-react';
+
+interface FormData {
+  displayName: string;
+  age: number | '';
+  experienceLevel: ExperienceLevel | null;
+  injuryHistory: string;
+  objectives: Objective[];
+  trainingType: TrainingType | null;
+  equipmentLevel: EquipmentLevel | null;
+}
+
+function formatDate(isoString: string | null): string {
+  if (!isoString) return 'No disponible';
+  return new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' }).format(new Date(isoString));
+}
+
+export default function ProfilePage() {
+  const { user, profile, refreshProfile } = useAuth();
+
+  const [formData, setFormData] = useState<FormData>({
+    displayName: '',
+    age: '',
+    experienceLevel: null,
+    injuryHistory: '',
+    objectives: [],
+    trainingType: null,
+    equipmentLevel: null,
+  });
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState('');
+
+  // Initialize form from profile
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        displayName: profile.display_name || '',
+        age: profile.age ?? '',
+        experienceLevel: profile.experience_level,
+        injuryHistory: profile.injury_history || '',
+        objectives: profile.objectives || [],
+        trainingType: profile.training_type,
+        equipmentLevel: profile.equipment_level,
+      });
+    }
+  }, [profile]);
+
+  // Dirty checking — detect if form has changed from profile values
+  const hasChanges = useMemo(() => {
+    if (!profile) return false;
+    return (
+      formData.displayName !== (profile.display_name || '') ||
+      formData.age !== (profile.age ?? '') ||
+      formData.experienceLevel !== profile.experience_level ||
+      formData.injuryHistory !== (profile.injury_history || '') ||
+      JSON.stringify(formData.objectives) !== JSON.stringify(profile.objectives || []) ||
+      formData.trainingType !== profile.training_type ||
+      formData.equipmentLevel !== profile.equipment_level
+    );
+  }, [formData, profile]);
+
+  const updateFormField = (updates: Partial<FormData>) => {
+    setFormData((prev) => {
+      const next = { ...prev, ...updates };
+      // Reset equipment when training type changes
+      if (updates.trainingType && updates.trainingType !== prev.trainingType) {
+        next.equipmentLevel = null;
+      }
+      return next;
+    });
+  };
+
+  // --- Objectives logic ---
+  const isObjectiveSelected = (obj: Objective) => formData.objectives.includes(obj);
+
+  const isObjectiveDisabled = (obj: Objective) => {
+    if (isObjectiveSelected(obj)) return false;
+    if (formData.objectives.length >= 2) return true;
+    return formData.objectives.some(
+      (selected) => INCOMPATIBLE_OBJECTIVES[selected]?.includes(obj)
+    );
+  };
+
+  const getIncompatibleMessage = (): string | null => {
+    for (const selected of formData.objectives) {
+      const incompatibles = INCOMPATIBLE_OBJECTIVES[selected];
+      if (incompatibles.length > 0) {
+        const disabledNames = incompatibles.filter(
+          (obj) => OBJECTIVES.some((o) => o.value === obj) && !isObjectiveSelected(obj)
+        );
+        if (disabledNames.length > 0) {
+          return `${selected} no es compatible con ${disabledNames.join(', ')} para este programa.`;
+        }
+      }
+    }
+    return null;
+  };
+
+  const toggleObjective = (obj: Objective) => {
+    if (isObjectiveDisabled(obj)) return;
+    if (isObjectiveSelected(obj)) {
+      updateFormField({ objectives: formData.objectives.filter((o) => o !== obj) });
+    } else {
+      updateFormField({ objectives: [...formData.objectives, obj] });
+    }
+  };
+
+  // --- Equipment options ---
+  const equipmentOptions = formData.trainingType === 'CrossFit'
+    ? CROSSFIT_EQUIPMENT_OPTIONS
+    : formData.trainingType === 'Calistenia'
+      ? CALISTENIA_EQUIPMENT_OPTIONS
+      : [];
+
+  // --- Validation ---
+  const isFormValid = (): boolean => {
+    return (
+      formData.displayName.trim() !== '' &&
+      typeof formData.age === 'number' &&
+      formData.age >= 13 &&
+      formData.age <= 120 &&
+      formData.experienceLevel !== null &&
+      formData.objectives.length >= 1 &&
+      formData.objectives.length <= 2 &&
+      formData.trainingType !== null &&
+      formData.equipmentLevel !== null
+    );
+  };
+
+  // --- Save ---
+  const handleSave = async () => {
+    if (!user || !isFormValid()) return;
+
+    setIsSaving(true);
+    setError('');
+
+    try {
+      await updateProfile(user.id, {
+        display_name: formData.displayName.trim(),
+        age: formData.age as number,
+        experience_level: formData.experienceLevel!,
+        injury_history: formData.injuryHistory.trim() || null,
+        objectives: formData.objectives,
+        training_type: formData.trainingType!,
+        equipment_level: formData.equipmentLevel!,
+      });
+
+      await refreshProfile();
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al guardar los cambios.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const incompatibleMessage = getIncompatibleMessage();
+
+  if (!profile) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin text-red-500" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 max-w-4xl py-8 space-y-8">
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
+          Mi Perfil
+        </h1>
+        <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">
+          Administra tu cuenta y configuración de entrenamiento
+        </p>
+      </div>
+
+      {/* Section A: Account Information */}
+      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 space-y-5">
+        <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+          <User className="w-5 h-5 text-neutral-400" />
+          Información de Cuenta
+        </h2>
+
+        {/* Email (read-only) */}
+        <div>
+          <label className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <Mail className="w-3.5 h-3.5 text-neutral-400" />
+            Email
+          </label>
+          <div className="px-3 py-2.5 text-sm text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+            {user?.email}
+          </div>
+        </div>
+
+        {/* Display Name (editable) */}
+        <div>
+          <label htmlFor="profile-name" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            Nombre <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="profile-name"
+            type="text"
+            value={formData.displayName}
+            onChange={(e) => updateFormField({ displayName: e.target.value })}
+            placeholder="Tu nombre"
+            className="w-full px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 ease-in-out text-sm"
+          />
+        </div>
+
+        {/* Account date */}
+        <div>
+          <label className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            <Calendar className="w-3.5 h-3.5 text-neutral-400" />
+            Miembro desde
+          </label>
+          <div className="px-3 py-2.5 text-sm text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 rounded-lg">
+            {formatDate(profile.created_at)}
+          </div>
+        </div>
+      </section>
+
+      {/* Section B: Training Configuration */}
+      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 space-y-6">
+        <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+          <svg className="w-5 h-5 text-neutral-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+          </svg>
+          Configuración de Entrenamiento
+        </h2>
+
+        {/* Age */}
+        <div>
+          <label htmlFor="profile-age" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            Edad <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="profile-age"
+            type="number"
+            min={13}
+            max={120}
+            value={formData.age}
+            onChange={(e) => updateFormField({ age: e.target.value === '' ? '' : Number(e.target.value) })}
+            placeholder="25"
+            className="w-full sm:w-32 px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 ease-in-out text-sm"
+          />
+        </div>
+
+        {/* Experience Level */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+            Nivel de experiencia <span className="text-red-500">*</span>
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {EXPERIENCE_LEVELS.map(({ value, description }) => {
+              const isSelected = formData.experienceLevel === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => updateFormField({ experienceLevel: value })}
+                  className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 text-left ${
+                    isSelected
+                      ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
+                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
+                  }`}
+                >
+                  {isSelected ? (
+                    <CircleDot className="w-5 h-5 text-red-500 shrink-0" />
+                  ) : (
+                    <Circle className="w-5 h-5 text-neutral-300 dark:text-neutral-600 shrink-0" />
+                  )}
+                  <div>
+                    <span className={`text-sm font-medium ${isSelected ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'}`}>
+                      {value}
+                    </span>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                      {description}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Injury History */}
+        <div>
+          <label htmlFor="profile-injury" className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            Historial de lesiones
+            <Info className="w-3.5 h-3.5 text-neutral-400" />
+            <span className="text-neutral-400 font-normal">(opcional)</span>
+          </label>
+          <textarea
+            id="profile-injury"
+            value={formData.injuryHistory}
+            onChange={(e) => updateFormField({ injuryHistory: e.target.value })}
+            placeholder="Ej: Lesión en rodilla izquierda hace 6 meses, dolor crónico en hombro..."
+            className="w-full px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 ease-in-out text-sm"
+            rows={3}
+          />
+        </div>
+
+        {/* Objectives */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+            Objetivos <span className="text-red-500">*</span>
+            <span className="text-neutral-400 font-normal ml-1">(selecciona 1 o 2)</span>
+          </label>
+          <div className="grid grid-cols-1 gap-2">
+            {OBJECTIVES.map(({ value, icon: Icon, description }) => {
+              const selected = isObjectiveSelected(value);
+              const disabled = isObjectiveDisabled(value);
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => toggleObjective(value)}
+                  disabled={disabled}
+                  className={`flex items-center gap-4 p-4 rounded-lg border transition-all duration-200 text-left ${
+                    selected
+                      ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
+                      : disabled
+                        ? 'border-neutral-200 dark:border-neutral-700 opacity-40 cursor-not-allowed'
+                        : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
+                  }`}
+                >
+                  <Icon className={`w-5 h-5 shrink-0 ${selected ? 'text-red-500' : 'text-neutral-400 dark:text-neutral-500'}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${
+                      selected ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'
+                    }`}>
+                      {value}
+                    </p>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                      {description}
+                    </p>
+                  </div>
+                  {selected ? (
+                    <CircleCheck className="w-5 h-5 text-red-500 shrink-0" />
+                  ) : (
+                    <Square className="w-5 h-5 text-neutral-300 dark:text-neutral-600 shrink-0" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {incompatibleMessage && (
+            <div className="flex items-start gap-2 p-3 mt-3 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30">
+              <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                {incompatibleMessage}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Training Type */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+            Tipo de entrenamiento <span className="text-red-500">*</span>
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {TRAINING_OPTIONS.map(({ value, title, description, icon: Icon }) => {
+              const selected = formData.trainingType === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => updateFormField({ trainingType: value })}
+                  className={`flex items-start gap-4 text-left p-5 rounded-lg border transition-all duration-200 ${
+                    selected
+                      ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
+                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
+                  }`}
+                >
+                  <Icon className={`w-6 h-6 shrink-0 mt-0.5 ${selected ? 'text-red-500' : 'text-neutral-400 dark:text-neutral-500'}`} />
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`text-base font-semibold ${
+                      selected ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'
+                    }`}>
+                      {title}
+                    </h3>
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                      {description}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Equipment Level */}
+        {formData.trainingType && (
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+              Equipamiento <span className="text-red-500">*</span>
+            </label>
+            <div className="grid grid-cols-1 gap-3">
+              {equipmentOptions.map(({ value, title, description, icon: Icon }) => {
+                const selected = formData.equipmentLevel === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => updateFormField({ equipmentLevel: value })}
+                    className={`flex items-start gap-4 text-left p-5 rounded-lg border transition-all duration-200 ${
+                      selected
+                        ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
+                        : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
+                    }`}
+                  >
+                    <Icon className={`w-6 h-6 shrink-0 mt-0.5 ${selected ? 'text-red-500' : 'text-neutral-400 dark:text-neutral-500'}`} />
+                    <div className="flex-1 min-w-0">
+                      <h3 className={`text-base font-semibold ${
+                        selected ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'
+                      }`}>
+                        {title}
+                      </h3>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        {description}
+                      </p>
+                    </div>
+                    {selected ? (
+                      <CircleCheck className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-neutral-300 dark:text-neutral-600 shrink-0 mt-0.5" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* Success message */}
+      {showSuccess && (
+        <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 px-4 py-3 rounded-xl text-sm">
+          <Check className="w-4 h-4 shrink-0" />
+          Cambios guardados correctamente.
+        </div>
+      )}
+
+      {/* Error message */}
+      {error && (
+        <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Save button */}
+      <button
+        onClick={handleSave}
+        disabled={isSaving || !hasChanges || !isFormValid()}
+        className="w-full py-3 text-sm font-bold uppercase tracking-wider text-white bg-red-500 rounded-xl hover:bg-red-600 shadow-lg shadow-red-500/25 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+      >
+        {isSaving ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Guardando...
+          </>
+        ) : (
+          <>
+            <Save className="w-4 h-4" />
+            Guardar Cambios
+          </>
+        )}
+      </button>
+
+      {/* Danger Zone */}
+      <section className="border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+          Zona de Peligro
+        </h2>
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          Estas acciones son permanentes y no se pueden deshacer.
+        </p>
+        <button
+          disabled
+          className="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-500/30 rounded-lg opacity-50 cursor-not-allowed"
+        >
+          Eliminar cuenta (próximamente)
+        </button>
+      </section>
+    </div>
+  );
+}
