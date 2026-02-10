@@ -18,6 +18,39 @@ export const metadata: Metadata = {
   title: "Forgia — Tu entrenador de CrossFit con IA",
   description:
     "Genera WODs personalizados con inteligencia artificial. Calentamiento, fuerza, metcon y enfriamiento adaptados a tu nivel.",
+  metadataBase: new URL("https://forgia.fit"),
+  manifest: "/manifest.json",
+  openGraph: {
+    title: "Forgia — Tu entrenador de CrossFit con IA",
+    description:
+      "Genera WODs personalizados con inteligencia artificial. Calentamiento, fuerza, metcon y enfriamiento adaptados a tu nivel.",
+    url: "https://forgia.fit",
+    siteName: "Forgia",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Forgia — Tu entrenador de CrossFit con IA",
+      },
+    ],
+    locale: "es_MX",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Forgia — Tu entrenador de CrossFit con IA",
+    description:
+      "Genera WODs personalizados con inteligencia artificial. Calentamiento, fuerza, metcon y enfriamiento adaptados a tu nivel.",
+    images: ["/og-image.png"],
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
