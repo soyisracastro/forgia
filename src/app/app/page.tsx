@@ -206,19 +206,6 @@ export default function AppPage() {
         <>
           <WodDisplay wod={wod} />
 
-          {/* Feedback form */}
-          {showFeedback && !savedFeedback && user && (
-            <div data-print-hide className="mt-6">
-              <WorkoutFeedbackForm
-                wod={wod}
-                wodId={savedWodId}
-                userId={user.id}
-                onSaved={handleFeedbackSaved}
-                initialTotalTime={liveWorkoutTime}
-              />
-            </div>
-          )}
-
           {/* Analysis (after feedback saved) */}
           {savedFeedback && (
             <div data-print-hide className="mt-6">
@@ -333,6 +320,17 @@ export default function AppPage() {
             if (!savedWodId) handleSaveWod();
           }}
           onCancel={() => setShowLiveMode(false)}
+        />
+      )}
+
+      {showFeedback && !savedFeedback && wod && user && (
+        <WorkoutFeedbackForm
+          wod={wod}
+          wodId={savedWodId}
+          userId={user.id}
+          onSaved={handleFeedbackSaved}
+          onClose={() => setShowFeedback(false)}
+          initialTotalTime={liveWorkoutTime}
         />
       )}
     </>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import type { SavedWod, WorkoutFeedback, GeminiAnalysis } from '@/types/wod';
-import { getWodHistory, deleteWod, getFeedbackForWod } from '@/lib/wods';
+import { getWodHistory, deleteWod, getFeedbackForWod, getWodIdsWithFeedback } from '@/lib/wods';
 import SegmentedButton from '@/components/ui/SegmentedButton';
 import WodListView from '@/components/WodListView';
 import CalendarView from '@/components/CalendarView';
@@ -17,13 +17,18 @@ export default function HistoriaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [feedbackMap, setFeedbackMap] = useState<Record<string, WorkoutFeedback | null>>({});
   const [loadingFeedback, setLoadingFeedback] = useState<Record<string, boolean>>({});
+  const [wodsWithFeedback, setWodsWithFeedback] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('Lista');
 
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        const data = await getWodHistory();
+        const [data, feedbackIds] = await Promise.all([
+          getWodHistory(),
+          getWodIdsWithFeedback(),
+        ]);
         setSavedWods(data);
+        setWodsWithFeedback(feedbackIds);
       } catch (e) {
         console.error('Error loading WOD history:', e);
       } finally {
@@ -110,6 +115,7 @@ export default function HistoriaPage() {
               onExpand={handleExpand}
               onDelete={handleDelete}
               onAnalysisComplete={handleAnalysisComplete}
+              wodsWithFeedback={wodsWithFeedback}
             />
           ) : (
             <CalendarView
@@ -120,6 +126,7 @@ export default function HistoriaPage() {
               onExpand={handleExpand}
               onDelete={handleDelete}
               onAnalysisComplete={handleAnalysisComplete}
+              wodsWithFeedback={wodsWithFeedback}
             />
           )}
         </>

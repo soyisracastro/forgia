@@ -1,3 +1,5 @@
+import { useEffect, useCallback } from 'react';
+import confetti from 'canvas-confetti';
 import type { Wod } from '@/types/wod';
 
 type SectionKey = 'warmUp' | 'strengthSkill' | 'metcon' | 'coolDown';
@@ -53,6 +55,26 @@ const LiveWorkoutSummary: React.FC<LiveWorkoutSummaryProps> = ({
   onContinue,
   onDiscard,
 }) => {
+  const fireConfetti = useCallback(() => {
+    const end = Date.now() + 600;
+    const frame = () => {
+      confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.6 } });
+      confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.6 } });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    };
+    frame();
+  }, []);
+
+  // Fire confetti on mount (workout completed!)
+  useEffect(() => {
+    fireConfetti();
+  }, [fireConfetti]);
+
+  const handleContinue = () => {
+    fireConfetti();
+    setTimeout(onContinue, 700);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-6 py-12">
       <CheckIcon />
@@ -91,7 +113,7 @@ const LiveWorkoutSummary: React.FC<LiveWorkoutSummaryProps> = ({
       {/* Actions */}
       <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
         <button
-          onClick={onContinue}
+          onClick={handleContinue}
           className="flex-1 px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors"
         >
           Registrar Resultado

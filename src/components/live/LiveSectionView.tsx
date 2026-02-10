@@ -13,14 +13,14 @@ const LiveSectionView: React.FC<LiveSectionViewProps> = ({ section }) => {
       <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent pointer-events-none" />
 
       {/* Scrollable content area */}
-      <div className="relative z-10 max-h-[40vh] overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+      <div className="relative z-10 p-6">
         <div className="flex flex-col gap-4">
           {/* Movements list with dot indicators */}
           {items.map((item, i) => (
             <div key={i}>
               <div className="flex items-center gap-4">
                 <div className={`size-2 rounded-full shrink-0 ${i === 0 ? 'bg-red-500/80' : 'bg-white/20'}`} />
-                <span className="text-white text-xl font-medium">{item}</span>
+                <span className="text-white text-base font-medium">{item}</span>
               </div>
               {i < items.length - 1 && (
                 <div className="h-px w-full bg-white/5 mt-4" />

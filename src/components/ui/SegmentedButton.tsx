@@ -12,6 +12,7 @@ export default function SegmentedButton({ options, selected, onSelect, disabled 
     <div className="flex bg-neutral-200 dark:bg-neutral-800 rounded-lg p-1 space-x-1 border border-neutral-300 dark:border-neutral-700">
       {options.map((option) => (
         <button
+          type="button"
           key={option}
           onClick={() => onSelect(option)}
           disabled={disabled}
