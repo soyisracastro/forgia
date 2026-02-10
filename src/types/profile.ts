@@ -1,4 +1,4 @@
-export type ExperienceLevel = 'Principiante' | 'Intermedio' | 'Avanzado';
+export type ExperienceLevel = 'Novato' | 'Principiante' | 'Intermedio' | 'Avanzado';
 
 export type Objective =
   | 'Ganar fuerza'

@@ -1,6 +1,7 @@
 'use client';
 
 import type { ExperienceLevel } from '@/types/profile';
+import { EXPERIENCE_LEVELS } from '@/lib/training-constants';
 import { User, Info, Circle, CircleDot } from 'lucide-react';
 
 interface Step1Data {
@@ -14,12 +15,6 @@ interface Step1Props {
   data: Step1Data;
   onChange: (updates: Partial<Step1Data>) => void;
 }
-
-const LEVELS: { value: ExperienceLevel; description: string }[] = [
-  { value: 'Principiante', description: 'Menos de 1 año de experiencia' },
-  { value: 'Intermedio', description: '1 a 3 años de experiencia' },
-  { value: 'Avanzado', description: 'Más de 3 años de experiencia' },
-];
 
 export default function Step1BasicInfo({ data, onChange }: Step1Props) {
   return (
@@ -71,7 +66,7 @@ export default function Step1BasicInfo({ data, onChange }: Step1Props) {
           Nivel de experiencia <span className="text-red-500">*</span>
         </label>
         <div className="space-y-2">
-          {LEVELS.map(({ value, description }) => {
+          {EXPERIENCE_LEVELS.map(({ value, description }) => {
             const isSelected = data.experienceLevel === value;
             return (
               <button

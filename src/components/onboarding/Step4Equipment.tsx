@@ -1,51 +1,8 @@
 'use client';
 
-import type { TrainingType, EquipmentLevel, CrossFitEquipment, CalisteniaEquipment } from '@/types/profile';
-import type { LucideIcon } from 'lucide-react';
-import { Dumbbell, Warehouse, PersonStanding, Grip, CircleCheck, Circle } from 'lucide-react';
-
-interface EquipmentOption {
-  value: EquipmentLevel;
-  title: string;
-  description: string;
-  icon: LucideIcon;
-}
-
-const CROSSFIT_OPTIONS: EquipmentOption[] = [
-  {
-    value: 'Box completo' as CrossFitEquipment,
-    title: 'Box completo',
-    description: 'Barras olímpicas, rig, rower, assault bike, bumper plates, kettlebells, wall balls, GHD, cuerda de trepar...',
-    icon: Dumbbell,
-  },
-  {
-    value: 'Box equipado básico' as CrossFitEquipment,
-    title: 'Box equipado básico',
-    description: 'Barra, mancuernas, discos, cajas, kettlebells. Sin máquinas de cardio ni anillas.',
-    icon: Warehouse,
-  },
-  {
-    value: 'Peso corporal + equipamiento mínimo' as CrossFitEquipment,
-    title: 'Peso corporal + equip. mínimo',
-    description: 'Poco o ningún equipamiento especializado. Ejercicios principalmente con peso corporal.',
-    icon: PersonStanding,
-  },
-];
-
-const CALISTENIA_OPTIONS: EquipmentOption[] = [
-  {
-    value: 'Superficies para ejercicios' as CalisteniaEquipment,
-    title: 'Superficies para ejercicios',
-    description: 'Suelo, barra de dominadas (pull-up bar). Lo esencial para calistenia.',
-    icon: PersonStanding,
-  },
-  {
-    value: 'Equipamiento complementario' as CalisteniaEquipment,
-    title: 'Equipamiento complementario',
-    description: 'Bandas elásticas, TRX, anillas, paralelas. Equipamiento extra para progresar.',
-    icon: Grip,
-  },
-];
+import type { TrainingType, EquipmentLevel } from '@/types/profile';
+import { CROSSFIT_EQUIPMENT_OPTIONS, CALISTENIA_EQUIPMENT_OPTIONS } from '@/lib/training-constants';
+import { CircleCheck, Circle } from 'lucide-react';
 
 interface Step4Props {
   trainingType: TrainingType;
@@ -54,7 +11,7 @@ interface Step4Props {
 }
 
 export default function Step4Equipment({ trainingType, selectedEquipment, onChange }: Step4Props) {
-  const options = trainingType === 'CrossFit' ? CROSSFIT_OPTIONS : CALISTENIA_OPTIONS;
+  const options = trainingType === 'CrossFit' ? CROSSFIT_EQUIPMENT_OPTIONS : CALISTENIA_EQUIPMENT_OPTIONS;
 
   return (
     <div className="space-y-4">

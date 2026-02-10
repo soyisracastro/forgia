@@ -1,29 +1,8 @@
 'use client';
 
 import type { Objective } from '@/types/profile';
-import type { LucideIcon } from 'lucide-react';
-import { Dumbbell, HeartPulse, Scale, TrendingDown, PersonStanding, Trophy, CircleCheck, Square } from 'lucide-react';
-import { Info } from 'lucide-react';
-
-const OBJECTIVES: { value: Objective; icon: LucideIcon; description: string }[] = [
-  { value: 'Ganar fuerza', icon: Dumbbell, description: 'Aumentar tu fuerza máxima en los levantamientos principales' },
-  { value: 'Ganar masa muscular', icon: Dumbbell, description: 'Hipertrofia y aumento de masa muscular' },
-  { value: 'Perder peso', icon: Scale, description: 'Reducir peso corporal y grasa' },
-  { value: 'Reducir tallas', icon: TrendingDown, description: 'Reducir medidas y mejorar composición corporal' },
-  { value: 'Mejorar resistencia', icon: HeartPulse, description: 'Aumentar tu capacidad cardiovascular y muscular' },
-  { value: 'Mejorar movilidad', icon: PersonStanding, description: 'Flexibilidad, rango de movimiento y recuperación' },
-  { value: 'Preparación para competencia', icon: Trophy, description: 'Entrenamiento enfocado en competir' },
-];
-
-const INCOMPATIBLE: Record<Objective, Objective[]> = {
-  'Ganar fuerza': [],
-  'Ganar masa muscular': ['Perder peso', 'Reducir tallas'],
-  'Perder peso': ['Ganar masa muscular', 'Preparación para competencia'],
-  'Reducir tallas': ['Ganar masa muscular'],
-  'Mejorar resistencia': [],
-  'Mejorar movilidad': [],
-  'Preparación para competencia': ['Perder peso'],
-};
+import { OBJECTIVES, INCOMPATIBLE_OBJECTIVES } from '@/lib/training-constants';
+import { CircleCheck, Square, Info } from 'lucide-react';
 
 interface Step2Props {
   selectedObjectives: Objective[];
@@ -38,13 +17,13 @@ export default function Step2Objectives({ selectedObjectives, onChange }: Step2P
     if (selectedObjectives.length >= 2) return true;
 
     return selectedObjectives.some(
-      (selected) => INCOMPATIBLE[selected]?.includes(obj)
+      (selected) => INCOMPATIBLE_OBJECTIVES[selected]?.includes(obj)
     );
   };
 
   const getIncompatibleMessage = (): string | null => {
     for (const selected of selectedObjectives) {
-      const incompatibles = INCOMPATIBLE[selected];
+      const incompatibles = INCOMPATIBLE_OBJECTIVES[selected];
       if (incompatibles.length > 0) {
         const disabledNames = incompatibles.filter((obj) =>
           OBJECTIVES.some((o) => o.value === obj && !isSelected(obj))

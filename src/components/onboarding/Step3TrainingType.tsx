@@ -1,23 +1,8 @@
 'use client';
 
 import type { TrainingType } from '@/types/profile';
-import type { LucideIcon } from 'lucide-react';
-import { Dumbbell, Activity, CircleCheck, Circle } from 'lucide-react';
-
-const TRAINING_OPTIONS: { value: TrainingType; title: string; description: string; icon: LucideIcon }[] = [
-  {
-    value: 'CrossFit',
-    title: 'CrossFit',
-    description: 'Entrenamientos variados que combinan halterofilia, gimnásticos y cardio. Ideal si tienes acceso a un box o gimnasio equipado.',
-    icon: Dumbbell,
-  },
-  {
-    value: 'Calistenia',
-    title: 'Calistenia',
-    description: 'Entrenamientos basados en peso corporal. Perfecto si prefieres entrenar en casa, parques o con equipamiento mínimo.',
-    icon: Activity,
-  },
-];
+import { TRAINING_OPTIONS } from '@/lib/training-constants';
+import { CircleCheck, Circle } from 'lucide-react';
 
 interface Step3Props {
   selectedType: TrainingType | null;
