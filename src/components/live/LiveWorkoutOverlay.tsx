@@ -441,12 +441,12 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
       </header>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-between px-6 pb-8 pt-2 overflow-hidden">
+      <main className="flex-1 flex flex-col items-center gap-4 px-6 pb-4 pt-2 min-h-0 overflow-y-auto">
         {/* Workout header */}
         <div className="text-center w-full space-y-1">
           <h1 className="text-red-500 text-2xl sm:text-[32px] font-bold tracking-tight leading-tight flex items-center justify-center gap-2">
             <span className="text-2xl animate-pulse">{SECTION_EMOJIS[phase as SectionKey]}</span>
-            {SECTION_LABELS[phase as SectionKey]}: {currentSection?.title}
+            {currentSection?.title}
           </h1>
           {getSectionSubtitle() && (
             <p className="text-white/60 text-sm font-medium tracking-wide uppercase">

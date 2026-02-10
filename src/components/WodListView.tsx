@@ -16,6 +16,7 @@ interface WodListViewProps {
   onExpand: (wodId: string) => void;
   onDelete: (id: string) => void;
   onAnalysisComplete: (wodId: string, analysis: GeminiAnalysis) => void;
+  wodsWithFeedback: Set<string>;
 }
 
 // --- SVG Icons ---
@@ -84,6 +85,7 @@ export default function WodListView({
   onExpand,
   onDelete,
   onAnalysisComplete,
+  wodsWithFeedback,
 }: WodListViewProps) {
   const [showWodDetail, setShowWodDetail] = useState<string | null>(null);
   const [showAnalysis, setShowAnalysis] = useState<string | null>(null);
@@ -92,7 +94,8 @@ export default function WodListView({
     <div className="flex flex-col gap-4">
       {savedWods.map((saved) => {
         const feedback = feedbackMap[saved.id];
-        const hasFeedback = feedback !== undefined && feedback !== null;
+        const hasFeedbackLoaded = feedback != null;
+        const hasFeedback = hasFeedbackLoaded || wodsWithFeedback.has(saved.id);
         const isExpanded = expandedId === saved.id;
         const { month, day } = formatDateBadge(saved.created_at);
         const metconSummary = getMetconSummary(saved.wod);
@@ -159,9 +162,9 @@ export default function WodListView({
                   <div className="space-y-2">
                     <div className="flex items-baseline justify-between">
                       <span className="text-sm font-bold text-neutral-900 dark:text-white">{metconSummary}</span>
-                      {hasFeedback && (
+                      {hasFeedbackLoaded && (
                         <span className="text-xs font-mono text-red-500 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20">
-                          {feedback.rx_or_scaled.toUpperCase()}
+                          {feedback!.rx_or_scaled.toUpperCase()}
                         </span>
                       )}
                     </div>
@@ -174,35 +177,35 @@ export default function WodListView({
                   </div>
 
                   {/* Stats grid */}
-                  {hasFeedback && (
+                  {hasFeedbackLoaded && (
                     <div className="grid grid-cols-3 gap-0 bg-neutral-100 dark:bg-neutral-800/60 rounded-lg p-3 border border-neutral-200 dark:border-neutral-700">
                       <div className="flex flex-col items-center justify-center border-r border-neutral-200 dark:border-neutral-700">
                         <span className="text-[10px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Dificultad</span>
-                        <span className="text-sm font-bold text-neutral-900 dark:text-white mt-0.5">{feedback.difficulty_rating}/10</span>
+                        <span className="text-sm font-bold text-neutral-900 dark:text-white mt-0.5">{feedback!.difficulty_rating}/10</span>
                       </div>
                       <div className="flex flex-col items-center justify-center border-r border-neutral-200 dark:border-neutral-700">
                         <span className="text-[10px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Tiempo</span>
                         <span className="text-sm font-bold text-neutral-900 dark:text-white mt-0.5">
-                          {feedback.total_time_minutes ? `${feedback.total_time_minutes} min` : '—'}
+                          {feedback!.total_time_minutes ? `${feedback!.total_time_minutes} min` : '—'}
                         </span>
                       </div>
                       <div className="flex flex-col items-center justify-center">
                         <span className="text-[10px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Modalidad</span>
-                        <span className="text-sm font-bold text-neutral-900 dark:text-white mt-0.5">{feedback.rx_or_scaled}</span>
+                        <span className="text-sm font-bold text-neutral-900 dark:text-white mt-0.5">{feedback!.rx_or_scaled}</span>
                       </div>
                     </div>
                   )}
 
                   {/* Notes */}
-                  {hasFeedback && feedback.notes && (
+                  {hasFeedbackLoaded && feedback!.notes && (
                     <div className="flex gap-2">
                       <StickyNoteIcon />
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 italic">&ldquo;{feedback.notes}&rdquo;</p>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 italic">&ldquo;{feedback!.notes}&rdquo;</p>
                     </div>
                   )}
 
                   {/* Action: Ver Análisis IA */}
-                  {hasFeedback && (
+                  {hasFeedbackLoaded && (
                     <button
                       onClick={() => setShowAnalysis(showAnalysis === saved.id ? null : saved.id)}
                       className="w-full mt-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-red-500 text-red-500 hover:bg-red-500/10 transition-colors group"
@@ -215,9 +218,9 @@ export default function WodListView({
                   )}
 
                   {/* WorkoutAnalysis (toggled) */}
-                  {showAnalysis === saved.id && hasFeedback && (
+                  {showAnalysis === saved.id && hasFeedbackLoaded && (
                     <WorkoutAnalysis
-                      feedback={feedback}
+                      feedback={feedback!}
                       onAnalysisComplete={(analysis) => onAnalysisComplete(saved.id, analysis)}
                     />
                   )}

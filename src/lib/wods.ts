@@ -112,3 +112,14 @@ export async function updateFeedbackAnalysis(feedbackId: string, analysis: Gemin
 
   if (error) throw new Error(`Error al guardar análisis: ${error.message}`);
 }
+
+export async function getWodIdsWithFeedback(): Promise<Set<string>> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('workout_feedback')
+    .select('wod_id')
+    .not('wod_id', 'is', null);
+
+  if (error) throw new Error(`Error al cargar indicadores de feedback: ${error.message}`);
+  return new Set((data ?? []).map((row) => row.wod_id as string));
+}

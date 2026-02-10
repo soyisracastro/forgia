@@ -17,6 +17,7 @@ interface CalendarViewProps {
   onExpand: (wodId: string) => void;
   onDelete: (id: string) => void;
   onAnalysisComplete: (wodId: string, analysis: GeminiAnalysis) => void;
+  wodsWithFeedback: Set<string>;
 }
 
 // --- SVG Icons ---
@@ -67,6 +68,7 @@ export default function CalendarView({
   onExpand,
   onDelete,
   onAnalysisComplete,
+  wodsWithFeedback,
 }: CalendarViewProps) {
   const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
@@ -158,7 +160,7 @@ export default function CalendarView({
           const isToday = key === todayKey;
           const isSelected = key === selectedDateKey;
           const hasWods = dayWods.length > 0;
-          const hasFeedback = dayWods.some((w) => feedbackMap[w.id] != null);
+          const hasFeedback = dayWods.some((w) => feedbackMap[w.id] != null || wodsWithFeedback.has(w.id));
 
           return (
             <button
@@ -221,7 +223,8 @@ export default function CalendarView({
 
           {selectedDayWods.map((saved, wodIdx) => {
             const feedback = feedbackMap[saved.id];
-            const hasFb = feedback !== undefined && feedback !== null;
+            const hasFbLoaded = feedback != null;
+            const hasFb = hasFbLoaded || wodsWithFeedback.has(saved.id);
             const metconSummary = getMetconSummary(saved.wod);
             const movementsSummary = getMovementsSummary(saved.wod);
 
@@ -245,17 +248,17 @@ export default function CalendarView({
                 </div>
 
                 {/* Feedback stats inline */}
-                {hasFb && (
+                {hasFbLoaded && (
                   <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
-                    <span>Dificultad: <strong className="text-neutral-900 dark:text-white">{feedback.difficulty_rating}/10</strong></span>
+                    <span>Dificultad: <strong className="text-neutral-900 dark:text-white">{feedback!.difficulty_rating}/10</strong></span>
                     <span>&middot;</span>
                     <span className="font-medium text-neutral-900 dark:text-white bg-neutral-200 dark:bg-neutral-800 px-1.5 py-0.5 rounded text-xs">
-                      {feedback.rx_or_scaled}
+                      {feedback!.rx_or_scaled}
                     </span>
-                    {feedback.total_time_minutes && (
+                    {feedback!.total_time_minutes && (
                       <>
                         <span>&middot;</span>
-                        <span>{feedback.total_time_minutes} min</span>
+                        <span>{feedback!.total_time_minutes} min</span>
                       </>
                     )}
                   </div>
@@ -272,7 +275,7 @@ export default function CalendarView({
                   >
                     Ver WOD completo
                   </button>
-                  {hasFb ? (
+                  {hasFbLoaded ? (
                     <button
                       onClick={() => {
                         onExpand(saved.id);
@@ -281,6 +284,13 @@ export default function CalendarView({
                       className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors shadow-lg shadow-red-500/20"
                     >
                       Ver Análisis
+                    </button>
+                  ) : hasFb ? (
+                    <button
+                      onClick={() => onExpand(saved.id)}
+                      className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-red-500 text-red-500 hover:bg-red-500/10 text-sm font-semibold transition-colors"
+                    >
+                      Cargar Feedback
                     </button>
                   ) : (
                     <button
@@ -310,10 +320,10 @@ export default function CalendarView({
                 )}
 
                 {/* Expanded Analysis */}
-                {showAnalysis === saved.id && expandedId === saved.id && hasFb && (
+                {showAnalysis === saved.id && expandedId === saved.id && hasFbLoaded && (
                   <div className="animate-fade-in-up">
                     <WorkoutAnalysis
-                      feedback={feedback}
+                      feedback={feedback!}
                       onAnalysisComplete={(analysis) => onAnalysisComplete(saved.id, analysis)}
                     />
                   </div>
