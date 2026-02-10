@@ -15,13 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Forgia — Tu entrenador de CrossFit con IA",
+  title: "Forgia — Tu entrenador de CrossFit con IA personalizada",
   description:
     "Genera WODs personalizados con inteligencia artificial. Calentamiento, fuerza, metcon y enfriamiento adaptados a tu nivel.",
   metadataBase: new URL("https://forgia.fit"),
   manifest: "/manifest.json",
   openGraph: {
-    title: "Forgia — Tu entrenador de CrossFit con IA",
+    title: "Forgia — Tu entrenador de CrossFit con IA personalizada",
     description:
       "Genera WODs personalizados con inteligencia artificial. Calentamiento, fuerza, metcon y enfriamiento adaptados a tu nivel.",
     url: "https://forgia.fit",
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Forgia — Tu entrenador de CrossFit con IA",
+    title: "Forgia — Tu entrenador de CrossFit con IA personalizada",
     description:
       "Genera WODs personalizados con inteligencia artificial. Calentamiento, fuerza, metcon y enfriamiento adaptados a tu nivel.",
     images: ["/og-image.png"],
