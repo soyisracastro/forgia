@@ -7,11 +7,10 @@ import {
   EXPERIENCE_LEVELS,
   OBJECTIVES,
   INCOMPATIBLE_OBJECTIVES,
-  TRAINING_OPTIONS,
   CROSSFIT_EQUIPMENT_OPTIONS,
-  CALISTENIA_EQUIPMENT_OPTIONS,
+  TRAINING_FREQUENCY_OPTIONS,
 } from '@/lib/training-constants';
-import type { ExperienceLevel, Objective, TrainingType, EquipmentLevel } from '@/types/profile';
+import type { ExperienceLevel, Objective, EquipmentLevel } from '@/types/profile';
 import {
   User,
   Mail,
@@ -32,8 +31,8 @@ interface FormData {
   experienceLevel: ExperienceLevel | null;
   injuryHistory: string;
   objectives: Objective[];
-  trainingType: TrainingType | null;
   equipmentLevel: EquipmentLevel | null;
+  trainingFrequency: number | null;
 }
 
 function formatDate(isoString: string | null): string {
@@ -50,8 +49,8 @@ export default function ProfilePage() {
     experienceLevel: null,
     injuryHistory: '',
     objectives: [],
-    trainingType: null,
     equipmentLevel: null,
+    trainingFrequency: null,
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -67,8 +66,8 @@ export default function ProfilePage() {
         experienceLevel: profile.experience_level,
         injuryHistory: profile.injury_history || '',
         objectives: profile.objectives || [],
-        trainingType: profile.training_type,
         equipmentLevel: profile.equipment_level,
+        trainingFrequency: profile.training_frequency ?? null,
       });
     }
   }, [profile]);
@@ -82,20 +81,13 @@ export default function ProfilePage() {
       formData.experienceLevel !== profile.experience_level ||
       formData.injuryHistory !== (profile.injury_history || '') ||
       JSON.stringify(formData.objectives) !== JSON.stringify(profile.objectives || []) ||
-      formData.trainingType !== profile.training_type ||
-      formData.equipmentLevel !== profile.equipment_level
+      formData.equipmentLevel !== profile.equipment_level ||
+      formData.trainingFrequency !== (profile.training_frequency ?? null)
     );
   }, [formData, profile]);
 
   const updateFormField = (updates: Partial<FormData>) => {
-    setFormData((prev) => {
-      const next = { ...prev, ...updates };
-      // Reset equipment when training type changes
-      if (updates.trainingType && updates.trainingType !== prev.trainingType) {
-        next.equipmentLevel = null;
-      }
-      return next;
-    });
+    setFormData((prev) => ({ ...prev, ...updates }));
   };
 
   // --- Objectives logic ---
@@ -133,13 +125,6 @@ export default function ProfilePage() {
     }
   };
 
-  // --- Equipment options ---
-  const equipmentOptions = formData.trainingType === 'CrossFit'
-    ? CROSSFIT_EQUIPMENT_OPTIONS
-    : formData.trainingType === 'Calistenia'
-      ? CALISTENIA_EQUIPMENT_OPTIONS
-      : [];
-
   // --- Validation ---
   const isFormValid = (): boolean => {
     return (
@@ -150,7 +135,6 @@ export default function ProfilePage() {
       formData.experienceLevel !== null &&
       formData.objectives.length >= 1 &&
       formData.objectives.length <= 2 &&
-      formData.trainingType !== null &&
       formData.equipmentLevel !== null
     );
   };
@@ -169,8 +153,9 @@ export default function ProfilePage() {
         experience_level: formData.experienceLevel!,
         injury_history: formData.injuryHistory.trim() || null,
         objectives: formData.objectives,
-        training_type: formData.trainingType!,
+        training_type: 'CrossFit',
         equipment_level: formData.equipmentLevel!,
+        training_frequency: formData.trainingFrequency,
       });
 
       await refreshProfile();
@@ -386,19 +371,19 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Training Type */}
+        {/* Equipment Level */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-            Tipo de entrenamiento <span className="text-red-500">*</span>
+            Equipamiento <span className="text-red-500">*</span>
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {TRAINING_OPTIONS.map(({ value, title, description, icon: Icon }) => {
-              const selected = formData.trainingType === value;
+          <div className="grid grid-cols-1 gap-3">
+            {CROSSFIT_EQUIPMENT_OPTIONS.map(({ value, title, description, icon: Icon }) => {
+              const selected = formData.equipmentLevel === value;
               return (
                 <button
                   key={value}
                   type="button"
-                  onClick={() => updateFormField({ trainingType: value })}
+                  onClick={() => updateFormField({ equipmentLevel: value })}
                   className={`flex items-start gap-4 text-left p-5 rounded-lg border transition-all duration-200 ${
                     selected
                       ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
@@ -412,7 +397,48 @@ export default function ProfilePage() {
                     }`}>
                       {title}
                     </h3>
-                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
+                      {description}
+                    </p>
+                  </div>
+                  {selected ? (
+                    <CircleCheck className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                  ) : (
+                    <Circle className="w-5 h-5 text-neutral-300 dark:text-neutral-600 shrink-0 mt-0.5" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Training Frequency */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+            Frecuencia de entrenamiento
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {TRAINING_FREQUENCY_OPTIONS.map(({ value, label, description }) => {
+              const selected = formData.trainingFrequency === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => updateFormField({ trainingFrequency: value })}
+                  className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 text-left ${
+                    selected
+                      ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
+                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
+                  }`}
+                >
+                  <span className={`text-lg font-bold tabular-nums ${selected ? 'text-red-500' : 'text-neutral-400 dark:text-neutral-500'}`}>
+                    {value}
+                  </span>
+                  <div>
+                    <span className={`text-sm font-medium ${selected ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'}`}>
+                      {label}
+                    </span>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
                       {description}
                     </p>
                   </div>
@@ -421,49 +447,6 @@ export default function ProfilePage() {
             })}
           </div>
         </div>
-
-        {/* Equipment Level */}
-        {formData.trainingType && (
-          <div>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-              Equipamiento <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-1 gap-3">
-              {equipmentOptions.map(({ value, title, description, icon: Icon }) => {
-                const selected = formData.equipmentLevel === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => updateFormField({ equipmentLevel: value })}
-                    className={`flex items-start gap-4 text-left p-5 rounded-lg border transition-all duration-200 ${
-                      selected
-                        ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
-                        : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
-                    }`}
-                  >
-                    <Icon className={`w-6 h-6 shrink-0 mt-0.5 ${selected ? 'text-red-500' : 'text-neutral-400 dark:text-neutral-500'}`} />
-                    <div className="flex-1 min-w-0">
-                      <h3 className={`text-base font-semibold ${
-                        selected ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'
-                      }`}>
-                        {title}
-                      </h3>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">
-                        {description}
-                      </p>
-                    </div>
-                    {selected ? (
-                      <CircleCheck className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                    ) : (
-                      <Circle className="w-5 h-5 text-neutral-300 dark:text-neutral-600 shrink-0 mt-0.5" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </section>
 
       {/* Success message */}

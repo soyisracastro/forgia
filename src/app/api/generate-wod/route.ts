@@ -59,12 +59,8 @@ function buildFeedbackContext(feedbackRecords: FeedbackRecord[]): string {
 // --- Prompt builders ---
 
 function buildSystemInstruction(profile: Profile, feedbackContext?: string, periodizationContext?: string): string {
-  const trainingLabel = profile.training_type === 'Calistenia'
-    ? 'Calistenia (calisthenics / bodyweight training)'
-    : 'CrossFit';
-
   const sections = [
-    `Eres un coach de ${trainingLabel} certificado de nivel elite con más de 15 años de experiencia. Tu especialidad es crear entrenamientos personalizados que se adaptan al perfil único de cada atleta.
+    `Eres un coach de CrossFit certificado de nivel elite con más de 15 años de experiencia. Tu especialidad es crear entrenamientos personalizados que se adaptan al perfil único de cada atleta.
 
 REGLAS ESTRICTAS:
 - Todo el contenido DEBE estar en español.
@@ -78,9 +74,9 @@ PERFIL DEL ATLETA:
 - Nombre: ${profile.display_name || 'Atleta'}
 - Edad: ${profile.age ? `${profile.age} años` : 'No especificada'}
 - Nivel de experiencia: ${profile.experience_level || 'Intermedio'}
-- Tipo de entrenamiento preferido: ${trainingLabel}
 - Equipamiento disponible: ${profile.equipment_level || 'No especificado'}
 - Objetivos: ${profile.objectives?.length ? profile.objectives.join(', ') : 'General fitness'}
+- Frecuencia de entrenamiento: ${profile.training_frequency ? `${profile.training_frequency} días/semana` : 'No especificada'}
 - Historial de lesiones o limitaciones: ${profile.injury_history?.trim() || 'Ninguno reportado'}`,
 
     buildLevelDirectives(profile),
@@ -151,16 +147,6 @@ function buildEquipmentDirectives(profile: Profile): string {
 - Puede incluir: mancuernas ligeras o kettlebells si están disponibles, pero diseñar de manera que funcione sin ellas.
 - NO incluir barras olímpicas, racks, máquinas de cardio.
 - Enfocarse en: push-ups, air squats, lunges, burpees, mountain climbers, planks, jumping jacks, correr, etc.`;
-    case 'Superficies para ejercicios':
-      return `EQUIPAMIENTO - CALISTENIA BÁSICA:
-- Solo suelo y barra de dominadas (pull-up bar).
-- Ejercicios: pull-ups, chin-ups, dips (en paralelas o banco), push-ups y variantes, squats con peso corporal, L-sits, hollow holds, planchas.
-- NO incluir ningún peso externo.`;
-    case 'Equipamiento complementario':
-      return `EQUIPAMIENTO - CALISTENIA EQUIPADA:
-- Barra de dominadas, paralelas/paralettes, anillas, bandas elásticas, TRX/suspension trainer.
-- Incluir progresiones avanzadas de calistenia.
-- Puede incluir: ring dips, ring rows, ring muscle-ups, front lever drills, planche progressions.`;
     default:
       return `EQUIPAMIENTO: Adaptar al equipamiento que el atleta tenga disponible.`;
   }
@@ -193,6 +179,18 @@ function buildObjectiveDirectives(profile: Profile): string {
         break;
       case 'Preparación para competencia':
         directives.push('- COMPETENCIA: Alta intensidad y variedad. Incluir movimientos de competencia. Simular formatos de competencia (couplets, triplets, chippers). Trabajar debilidades.');
+        break;
+      case 'Preparación HYROX':
+        directives.push(`- PREPARACIÓN HYROX: El atleta se prepara para competir en HYROX (8km carrera + 8 estaciones funcionales).
+- CONCEPTO CLAVE: "Running Comprometido" - correr bajo fatiga de estaciones funcionales.
+- Incluir SIEMPRE trabajo de carrera (zona 2 o intervalos) en el WOD.
+- Estaciones HYROX a simular: SkiErg, Sled Push/Pull, Burpee Broad Jump, Rowing, Farmers Carry, Sandbag Lunges, Wall Balls.
+- Formato frecuente: "Sándwich de Fatiga" → Carrera + Estación + Carrera.
+- NO incluir movimientos de alta complejidad técnica (no Snatch, no Muscle-ups). Enfocarse en transferencia directa a HYROX.
+- Técnicas clave: Sled Push a 45° con pasos cortos, Rowing 60% piernas, Wall Balls rompiendo series temprano.
+- REGLA DEL 85%: Pacing conservador. El primer kilómetro debe ser el más lento.
+- Metcons más largos que CrossFit tradicional (20-40 min para simular duración de carrera HYROX).
+- Priorizar base aeróbica y resistencia sobre fuerza máxima.`);
         break;
     }
   }

@@ -4,13 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
-import type { ExperienceLevel, Objective, TrainingType, EquipmentLevel } from '@/types/profile';
+import type { ExperienceLevel, Objective, EquipmentLevel } from '@/types/profile';
 import { ArrowRight } from 'lucide-react';
 import StepIndicator from './StepIndicator';
 import Step1BasicInfo from './Step1BasicInfo';
 import Step2Objectives from './Step2Objectives';
-import Step3TrainingType from './Step3TrainingType';
 import Step4Equipment from './Step4Equipment';
+import Step4Frequency from './Step4Frequency';
 
 interface FormData {
   name: string;
@@ -18,8 +18,8 @@ interface FormData {
   experienceLevel: ExperienceLevel | null;
   injuryHistory: string;
   objectives: Objective[];
-  trainingType: TrainingType | null;
   equipmentLevel: EquipmentLevel | null;
+  trainingFrequency: number | null;
 }
 
 export default function OnboardingWizard() {
@@ -35,19 +35,12 @@ export default function OnboardingWizard() {
     experienceLevel: null,
     injuryHistory: '',
     objectives: [],
-    trainingType: null,
     equipmentLevel: null,
+    trainingFrequency: null,
   });
 
   const updateFormData = (updates: Partial<FormData>) => {
-    setFormData((prev) => {
-      const next = { ...prev, ...updates };
-      // Reset equipment when training type changes
-      if (updates.trainingType && updates.trainingType !== prev.trainingType) {
-        next.equipmentLevel = null;
-      }
-      return next;
-    });
+    setFormData((prev) => ({ ...prev, ...updates }));
   };
 
   const isStepValid = (step: number): boolean => {
@@ -63,9 +56,9 @@ export default function OnboardingWizard() {
       case 2:
         return formData.objectives.length >= 1;
       case 3:
-        return formData.trainingType !== null;
-      case 4:
         return formData.equipmentLevel !== null;
+      case 4:
+        return formData.trainingFrequency !== null;
       default:
         return false;
     }
@@ -101,8 +94,9 @@ export default function OnboardingWizard() {
         experience_level: formData.experienceLevel,
         injury_history: formData.injuryHistory.trim() || null,
         objectives: formData.objectives,
-        training_type: formData.trainingType,
+        training_type: 'CrossFit',
         equipment_level: formData.equipmentLevel,
+        training_frequency: formData.trainingFrequency,
         onboarding_completed: true,
       });
 
@@ -139,17 +133,16 @@ export default function OnboardingWizard() {
         );
       case 3:
         return (
-          <Step3TrainingType
-            selectedType={formData.trainingType}
-            onChange={(trainingType) => updateFormData({ trainingType })}
+          <Step4Equipment
+            selectedEquipment={formData.equipmentLevel}
+            onChange={(equipmentLevel) => updateFormData({ equipmentLevel })}
           />
         );
       case 4:
         return (
-          <Step4Equipment
-            trainingType={formData.trainingType!}
-            selectedEquipment={formData.equipmentLevel}
-            onChange={(equipmentLevel) => updateFormData({ equipmentLevel })}
+          <Step4Frequency
+            selectedFrequency={formData.trainingFrequency}
+            onChange={(trainingFrequency) => updateFormData({ trainingFrequency })}
           />
         );
       default:
