@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/types/profile';
 import { buildPeriodizationAnalysis, buildPeriodizationContext } from '@/lib/periodization';
 import type { WodRecord, FeedbackRecord as PeriodizationFeedbackRecord } from '@/lib/periodization';
+import type { ProgramWeek } from '@/types/program';
 
 // --- Feedback context ---
 
@@ -56,15 +57,34 @@ function buildFeedbackContext(feedbackRecords: FeedbackRecord[]): string {
   return lines.join('\n');
 }
 
+// --- Program context ---
+
+function buildProgramContext(weeks: ProgramWeek[], weekNumber: number, sessionIndex: number): string {
+  const week = weeks.find((w) => w.number === weekNumber);
+  if (!week) return '';
+
+  const session = week.sessions[sessionIndex];
+  if (!session) return '';
+
+  const lines = [
+    'PROGRAMA MENSUAL ACTIVO:',
+    `- Semana actual: ${weekNumber} de 4 (${week.focus})`,
+    `- Sesión de hoy: ${sessionIndex + 1} de ${week.sessions.length}`,
+    `- Tipo de sesión: ${session.type}`,
+    `- Énfasis: ${session.emphasis}`,
+    `- Intensidad objetivo: ${session.intensity}`,
+    `- Skill focus de la semana: ${week.skillFocus}`,
+    'DIRECTIVA: Diseña el WOD siguiendo esta estructura. El tipo de sesión y la intensidad son obligatorios. Adapta el WOD al tipo indicado.',
+  ];
+
+  return lines.join('\n');
+}
+
 // --- Prompt builders ---
 
-function buildSystemInstruction(profile: Profile, feedbackContext?: string, periodizationContext?: string): string {
-  const trainingLabel = profile.training_type === 'Calistenia'
-    ? 'Calistenia (calisthenics / bodyweight training)'
-    : 'CrossFit';
-
+function buildSystemInstruction(profile: Profile, feedbackContext?: string, periodizationContext?: string, programContext?: string): string {
   const sections = [
-    `Eres un coach de ${trainingLabel} certificado de nivel elite con más de 15 años de experiencia. Tu especialidad es crear entrenamientos personalizados que se adaptan al perfil único de cada atleta.
+    `Eres un coach de CrossFit certificado de nivel elite con más de 15 años de experiencia. Tu especialidad es crear entrenamientos personalizados que se adaptan al perfil único de cada atleta.
 
 REGLAS ESTRICTAS:
 - Todo el contenido DEBE estar en español.
@@ -78,9 +98,9 @@ PERFIL DEL ATLETA:
 - Nombre: ${profile.display_name || 'Atleta'}
 - Edad: ${profile.age ? `${profile.age} años` : 'No especificada'}
 - Nivel de experiencia: ${profile.experience_level || 'Intermedio'}
-- Tipo de entrenamiento preferido: ${trainingLabel}
 - Equipamiento disponible: ${profile.equipment_level || 'No especificado'}
 - Objetivos: ${profile.objectives?.length ? profile.objectives.join(', ') : 'General fitness'}
+- Frecuencia de entrenamiento: ${profile.training_frequency ? `${profile.training_frequency} días/semana` : 'No especificada'}
 - Historial de lesiones o limitaciones: ${profile.injury_history?.trim() || 'Ninguno reportado'}`,
 
     buildLevelDirectives(profile),
@@ -90,6 +110,7 @@ PERFIL DEL ATLETA:
     buildAgeDirectives(profile),
     feedbackContext || '',
     periodizationContext || '',
+    programContext || '',
   ];
 
   return sections.filter(Boolean).join('\n\n');
@@ -151,16 +172,6 @@ function buildEquipmentDirectives(profile: Profile): string {
 - Puede incluir: mancuernas ligeras o kettlebells si están disponibles, pero diseñar de manera que funcione sin ellas.
 - NO incluir barras olímpicas, racks, máquinas de cardio.
 - Enfocarse en: push-ups, air squats, lunges, burpees, mountain climbers, planks, jumping jacks, correr, etc.`;
-    case 'Superficies para ejercicios':
-      return `EQUIPAMIENTO - CALISTENIA BÁSICA:
-- Solo suelo y barra de dominadas (pull-up bar).
-- Ejercicios: pull-ups, chin-ups, dips (en paralelas o banco), push-ups y variantes, squats con peso corporal, L-sits, hollow holds, planchas.
-- NO incluir ningún peso externo.`;
-    case 'Equipamiento complementario':
-      return `EQUIPAMIENTO - CALISTENIA EQUIPADA:
-- Barra de dominadas, paralelas/paralettes, anillas, bandas elásticas, TRX/suspension trainer.
-- Incluir progresiones avanzadas de calistenia.
-- Puede incluir: ring dips, ring rows, ring muscle-ups, front lever drills, planche progressions.`;
     default:
       return `EQUIPAMIENTO: Adaptar al equipamiento que el atleta tenga disponible.`;
   }
@@ -193,6 +204,18 @@ function buildObjectiveDirectives(profile: Profile): string {
         break;
       case 'Preparación para competencia':
         directives.push('- COMPETENCIA: Alta intensidad y variedad. Incluir movimientos de competencia. Simular formatos de competencia (couplets, triplets, chippers). Trabajar debilidades.');
+        break;
+      case 'Preparación HYROX':
+        directives.push(`- PREPARACIÓN HYROX: El atleta se prepara para competir en HYROX (8km carrera + 8 estaciones funcionales).
+- CONCEPTO CLAVE: "Running Comprometido" - correr bajo fatiga de estaciones funcionales.
+- Incluir SIEMPRE trabajo de carrera (zona 2 o intervalos) en el WOD.
+- Estaciones HYROX a simular: SkiErg, Sled Push/Pull, Burpee Broad Jump, Rowing, Farmers Carry, Sandbag Lunges, Wall Balls.
+- Formato frecuente: "Sándwich de Fatiga" → Carrera + Estación + Carrera.
+- NO incluir movimientos de alta complejidad técnica (no Snatch, no Muscle-ups). Enfocarse en transferencia directa a HYROX.
+- Técnicas clave: Sled Push a 45° con pasos cortos, Rowing 60% piernas, Wall Balls rompiendo series temprano.
+- REGLA DEL 85%: Pacing conservador. El primer kilómetro debe ser el más lento.
+- Metcons más largos que CrossFit tradicional (20-40 min para simular duración de carrera HYROX).
+- Priorizar base aeróbica y resistencia sobre fuerza máxima.`);
         break;
     }
   }
@@ -289,7 +312,12 @@ export async function POST(request: NextRequest) {
   const twentyEightDaysAgo = new Date();
   twentyEightDaysAgo.setDate(twentyEightDaysAgo.getDate() - 28);
 
-  const [feedbackResult, wodsResult] = await Promise.all([
+  // Load program for current month
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+
+  const [feedbackResult, wodsResult, programResult] = await Promise.all([
     supabase
       .from('workout_feedback')
       .select('difficulty_rating, total_time_minutes, rx_or_scaled, notes, wod_snapshot, created_at')
@@ -302,6 +330,13 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
       .gte('created_at', twentyEightDaysAgo.toISOString())
       .order('created_at', { ascending: false }),
+    supabase
+      .from('training_programs')
+      .select('structure')
+      .eq('user_id', user.id)
+      .eq('month', currentMonth)
+      .eq('year', currentYear)
+      .single(),
   ]);
 
   const allFeedback = (feedbackResult.data ?? []) as FeedbackRecord[];
@@ -317,9 +352,33 @@ export async function POST(request: NextRequest) {
   );
   const periodizationContext = buildPeriodizationContext(periodizationAnalysis);
 
+  // Program context (if active program exists)
+  let programContext = '';
+  if (programResult.data?.structure) {
+    const weeks = programResult.data.structure as ProgramWeek[];
+    const weekNumber = Math.min(Math.ceil(now.getDate() / 7), 4);
+
+    // Count WODs generated this week to determine current session
+    const dayOfWeek = now.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() + mondayOffset);
+    weekStart.setHours(0, 0, 0, 0);
+
+    const wodsThisWeek = allWods.filter(
+      (w) => new Date(w.created_at) >= weekStart
+    ).length;
+
+    const currentWeek = weeks.find((w) => w.number === weekNumber);
+    if (currentWeek) {
+      const sessionIndex = Math.min(wodsThisWeek, currentWeek.sessions.length - 1);
+      programContext = buildProgramContext(weeks, weekNumber, sessionIndex);
+    }
+  }
+
   // Build prompt
   const typedProfile = profile as Profile;
-  const systemInstruction = buildSystemInstruction(typedProfile, feedbackContext, periodizationContext);
+  const systemInstruction = buildSystemInstruction(typedProfile, feedbackContext, periodizationContext, programContext);
   const userPrompt = buildUserPrompt(sessionNotes);
 
   // Gemini schema (same structure as before)

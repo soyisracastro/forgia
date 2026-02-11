@@ -9,6 +9,7 @@ export interface ProfileUpdateInput {
   objectives: Objective[];
   training_type: TrainingType;
   equipment_level: EquipmentLevel;
+  training_frequency: number | null;
 }
 
 export async function updateProfile(userId: string, input: ProfileUpdateInput): Promise<void> {
@@ -23,6 +24,7 @@ export async function updateProfile(userId: string, input: ProfileUpdateInput): 
       objectives: input.objectives,
       training_type: input.training_type,
       equipment_level: input.equipment_level,
+      training_frequency: input.training_frequency,
       updated_at: new Date().toISOString(),
     })
     .eq('id', userId);

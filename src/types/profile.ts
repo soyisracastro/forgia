@@ -7,20 +7,17 @@ export type Objective =
   | 'Reducir tallas'
   | 'Mejorar resistencia'
   | 'Mejorar movilidad'
-  | 'Preparación para competencia';
+  | 'Preparación para competencia'
+  | 'Preparación HYROX';
 
-export type TrainingType = 'CrossFit' | 'Calistenia';
+export type TrainingType = 'CrossFit';
 
 export type CrossFitEquipment =
   | 'Box completo'
   | 'Box equipado básico'
   | 'Peso corporal + equipamiento mínimo';
 
-export type CalisteniaEquipment =
-  | 'Superficies para ejercicios'
-  | 'Equipamiento complementario';
-
-export type EquipmentLevel = CrossFitEquipment | CalisteniaEquipment;
+export type EquipmentLevel = CrossFitEquipment;
 
 export interface Profile {
   id: string;
@@ -32,6 +29,7 @@ export interface Profile {
   objectives: Objective[] | null;
   training_type: TrainingType | null;
   equipment_level: EquipmentLevel | null;
+  training_frequency: number | null;
   terms_accepted_at: string | null;
   created_at: string;
   updated_at: string;

@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import type { Wod, SavedWod, WorkoutFeedback, WorkoutFeedbackInput, GeminiAnalysis } from '@/types/wod';
+import type { Wod, SavedWod, WorkoutFeedback, WorkoutFeedbackInput } from '@/types/wod';
 
 export async function saveWod(userId: string, wod: Wod): Promise<SavedWod> {
   const supabase = createClient();
@@ -101,16 +101,6 @@ export async function getRecentFeedback(limit = 5): Promise<WorkoutFeedback[]> {
 
   if (error) throw new Error(`Error al cargar feedback reciente: ${error.message}`);
   return (data ?? []) as WorkoutFeedback[];
-}
-
-export async function updateFeedbackAnalysis(feedbackId: string, analysis: GeminiAnalysis): Promise<void> {
-  const supabase = createClient();
-  const { error } = await supabase
-    .from('workout_feedback')
-    .update({ gemini_analysis: analysis })
-    .eq('id', feedbackId);
-
-  if (error) throw new Error(`Error al guardar análisis: ${error.message}`);
 }
 
 export async function getWodIdsWithFeedback(): Promise<Set<string>> {

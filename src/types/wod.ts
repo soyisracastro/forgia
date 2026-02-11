@@ -60,6 +60,3 @@ export interface GeminiAnalysis {
   progresion_sugerida: string;
 }
 
-export interface AnalyzeFeedbackRequest {
-  feedbackId: string;
-}

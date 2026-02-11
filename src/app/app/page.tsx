@@ -11,8 +11,8 @@ import WodDisplay from '@/components/WodDisplay';
 import CopyWodButton from '@/components/CopyWodButton';
 import PrintWodButton from '@/components/PrintWodButton';
 import WorkoutFeedbackForm from '@/components/WorkoutFeedbackForm';
-import WorkoutAnalysis from '@/components/WorkoutAnalysis';
 import TrainingIntelligenceCard from '@/components/TrainingIntelligenceCard';
+import ProgramBanner from '@/components/ProgramBanner';
 import LiveWorkoutOverlay from '@/components/live/LiveWorkoutOverlay';
 
 // --- SVG Icons ---
@@ -205,13 +205,6 @@ export default function AppPage() {
       return (
         <>
           <WodDisplay wod={wod} />
-
-          {/* Analysis (after feedback saved) */}
-          {savedFeedback && (
-            <div data-print-hide className="mt-6">
-              <WorkoutAnalysis feedback={savedFeedback} />
-            </div>
-          )}
         </>
       );
     }
@@ -233,6 +226,8 @@ export default function AppPage() {
       </div>
 
       <TrainingIntelligenceCard />
+
+      <ProgramBanner />
 
       {/* Session notes — always visible */}
       <div data-print-hide className="mb-6">

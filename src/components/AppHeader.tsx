@@ -11,6 +11,7 @@ export default function AppHeader() {
 
   const navLinks = [
     { href: '/app', label: 'WOD' },
+    { href: '/app/programa', label: 'Programa' },
     { href: '/app/historia', label: 'Historia' },
     { href: '/app/perfil', label: 'Perfil' },
   ];

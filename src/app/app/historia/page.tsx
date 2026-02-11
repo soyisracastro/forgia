@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import type { SavedWod, WorkoutFeedback, GeminiAnalysis } from '@/types/wod';
+import type { SavedWod, WorkoutFeedback } from '@/types/wod';
 import { getWodHistory, deleteWod, getFeedbackForWod, getWodIdsWithFeedback } from '@/lib/wods';
 import SegmentedButton from '@/components/ui/SegmentedButton';
 import WodListView from '@/components/WodListView';
@@ -65,13 +65,6 @@ export default function HistoriaPage() {
     }
   }, []);
 
-  const handleAnalysisComplete = useCallback((wodId: string, analysis: GeminiAnalysis) => {
-    setFeedbackMap((prev) => ({
-      ...prev,
-      [wodId]: prev[wodId] ? { ...prev[wodId]!, gemini_analysis: analysis } : null,
-    }));
-  }, []);
-
   return (
     <>
       <div data-print-hide className="mb-6">
@@ -114,7 +107,6 @@ export default function HistoriaPage() {
               expandedId={expandedId}
               onExpand={handleExpand}
               onDelete={handleDelete}
-              onAnalysisComplete={handleAnalysisComplete}
               wodsWithFeedback={wodsWithFeedback}
             />
           ) : (
@@ -125,7 +117,6 @@ export default function HistoriaPage() {
               expandedId={expandedId}
               onExpand={handleExpand}
               onDelete={handleDelete}
-              onAnalysisComplete={handleAnalysisComplete}
               wodsWithFeedback={wodsWithFeedback}
             />
           )}
