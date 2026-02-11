@@ -24,6 +24,7 @@ import {
   Loader2,
   Check,
 } from 'lucide-react';
+import LevelAssessmentCard from '@/components/LevelAssessmentCard';
 
 interface FormData {
   displayName: string;
@@ -448,6 +449,9 @@ export default function ProfilePage() {
           </div>
         </div>
       </section>
+
+      {/* Level Assessment */}
+      <LevelAssessmentCard />
 
       {/* Success message */}
       {showSuccess && (

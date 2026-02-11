@@ -5,6 +5,8 @@ import type { MonthlyProgram, ProgramWeek, ProgramSession } from '@/types/progra
 import { getActiveProgram, getWodCountThisWeek, getCurrentWeekNumber } from '@/lib/programs';
 import { generateProgram } from '@/lib/gemini';
 import Spinner from '@/components/Spinner';
+import WeeklyAnalysisSection from '@/components/WeeklyAnalysisSection';
+import LevelAssessmentCard from '@/components/LevelAssessmentCard';
 
 // --- SVG Icons ---
 
@@ -229,6 +231,9 @@ export default function ProgramaPage() {
         )}
       </div>
 
+      {/* Level Assessment */}
+      <LevelAssessmentCard />
+
       {/* Error */}
       {error && (
         <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
@@ -279,6 +284,9 @@ export default function ProgramaPage() {
           ))}
         </div>
       )}
+
+      {/* Weekly analysis */}
+      {!generating && program && <WeeklyAnalysisSection />}
     </div>
   );
 }

@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import type { SavedWod, WorkoutFeedback, GeminiAnalysis } from '@/types/wod';
+import type { SavedWod, WorkoutFeedback } from '@/types/wod';
 import WodDisplay from '@/components/WodDisplay';
 import CopyWodButton from '@/components/CopyWodButton';
 import PrintWodButton from '@/components/PrintWodButton';
-import WorkoutAnalysis from '@/components/WorkoutAnalysis';
 import Spinner from '@/components/Spinner';
 
 interface WodListViewProps {
@@ -15,7 +14,6 @@ interface WodListViewProps {
   expandedId: string | null;
   onExpand: (wodId: string) => void;
   onDelete: (id: string) => void;
-  onAnalysisComplete: (wodId: string, analysis: GeminiAnalysis) => void;
   wodsWithFeedback: Set<string>;
 }
 
@@ -37,13 +35,6 @@ const StickyNoteIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-400 shrink-0 mt-0.5">
     <path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z" />
     <path d="M15 3v4a2 2 0 0 0 2 2h4" />
-  </svg>
-);
-
-const SparklesIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
-    <path d="M20 3v4"/><path d="M22 5h-4"/>
   </svg>
 );
 
@@ -84,11 +75,9 @@ export default function WodListView({
   expandedId,
   onExpand,
   onDelete,
-  onAnalysisComplete,
   wodsWithFeedback,
 }: WodListViewProps) {
   const [showWodDetail, setShowWodDetail] = useState<string | null>(null);
-  const [showAnalysis, setShowAnalysis] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col gap-4">
@@ -202,27 +191,6 @@ export default function WodListView({
                       <StickyNoteIcon />
                       <p className="text-xs text-neutral-500 dark:text-neutral-400 italic">&ldquo;{feedback!.notes}&rdquo;</p>
                     </div>
-                  )}
-
-                  {/* Action: Ver Análisis IA */}
-                  {hasFeedbackLoaded && (
-                    <button
-                      onClick={() => setShowAnalysis(showAnalysis === saved.id ? null : saved.id)}
-                      className="w-full mt-1 flex items-center justify-center gap-2 py-2.5 rounded-lg border border-red-500 text-red-500 hover:bg-red-500/10 transition-colors group"
-                    >
-                      <SparklesIcon className="group-hover:scale-110 transition-transform" />
-                      <span className="text-sm font-bold">
-                        {showAnalysis === saved.id ? 'Ocultar Análisis' : 'Ver Análisis IA'}
-                      </span>
-                    </button>
-                  )}
-
-                  {/* WorkoutAnalysis (toggled) */}
-                  {showAnalysis === saved.id && hasFeedbackLoaded && (
-                    <WorkoutAnalysis
-                      feedback={feedback!}
-                      onAnalysisComplete={(analysis) => onAnalysisComplete(saved.id, analysis)}
-                    />
                   )}
 
                   {/* Ver WOD completo */}

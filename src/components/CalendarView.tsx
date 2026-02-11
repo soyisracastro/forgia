@@ -1,12 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { SavedWod, WorkoutFeedback, GeminiAnalysis } from '@/types/wod';
+import type { SavedWod, WorkoutFeedback } from '@/types/wod';
 import { groupWodsByDate, getCalendarDays, dateToKey, formatMonthYear, DAY_NAMES_SHORT } from '@/lib/dateUtils';
 import WodDisplay from '@/components/WodDisplay';
 import CopyWodButton from '@/components/CopyWodButton';
 import PrintWodButton from '@/components/PrintWodButton';
-import WorkoutAnalysis from '@/components/WorkoutAnalysis';
 import Spinner from '@/components/Spinner';
 
 interface CalendarViewProps {
@@ -16,7 +15,6 @@ interface CalendarViewProps {
   expandedId: string | null;
   onExpand: (wodId: string) => void;
   onDelete: (id: string) => void;
-  onAnalysisComplete: (wodId: string, analysis: GeminiAnalysis) => void;
   wodsWithFeedback: Set<string>;
 }
 
@@ -67,14 +65,12 @@ export default function CalendarView({
   expandedId,
   onExpand,
   onDelete,
-  onAnalysisComplete,
   wodsWithFeedback,
 }: CalendarViewProps) {
   const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
   const [showWodDetail, setShowWodDetail] = useState<string | null>(null);
-  const [showAnalysis, setShowAnalysis] = useState<string | null>(null);
 
   const wodsByDate = useMemo(() => groupWodsByDate(savedWods), [savedWods]);
   const calendarDays = useMemo(() => getCalendarDays(currentYear, currentMonth), [currentYear, currentMonth]);
@@ -277,13 +273,10 @@ export default function CalendarView({
                   </button>
                   {hasFbLoaded ? (
                     <button
-                      onClick={() => {
-                        onExpand(saved.id);
-                        setShowAnalysis(showAnalysis === saved.id ? null : saved.id);
-                      }}
-                      className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors shadow-lg shadow-red-500/20"
+                      disabled
+                      className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-semibold cursor-default border border-emerald-500/20"
                     >
-                      Ver Análisis
+                      Feedback registrado
                     </button>
                   ) : hasFb ? (
                     <button
@@ -316,16 +309,6 @@ export default function CalendarView({
                         Eliminar
                       </button>
                     </div>
-                  </div>
-                )}
-
-                {/* Expanded Analysis */}
-                {showAnalysis === saved.id && expandedId === saved.id && hasFbLoaded && (
-                  <div className="animate-fade-in-up">
-                    <WorkoutAnalysis
-                      feedback={feedback!}
-                      onAnalysisComplete={(analysis) => onAnalysisComplete(saved.id, analysis)}
-                    />
                   </div>
                 )}
 
