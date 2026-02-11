@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { Profile } from '@/types/profile';
 import { buildPeriodizationAnalysis, buildPeriodizationContext } from '@/lib/periodization';
 import type { WodRecord, FeedbackRecord as PeriodizationFeedbackRecord } from '@/lib/periodization';
+import type { ProgramWeek } from '@/types/program';
 
 // --- Feedback context ---
 
@@ -56,9 +57,32 @@ function buildFeedbackContext(feedbackRecords: FeedbackRecord[]): string {
   return lines.join('\n');
 }
 
+// --- Program context ---
+
+function buildProgramContext(weeks: ProgramWeek[], weekNumber: number, sessionIndex: number): string {
+  const week = weeks.find((w) => w.number === weekNumber);
+  if (!week) return '';
+
+  const session = week.sessions[sessionIndex];
+  if (!session) return '';
+
+  const lines = [
+    'PROGRAMA MENSUAL ACTIVO:',
+    `- Semana actual: ${weekNumber} de 4 (${week.focus})`,
+    `- Sesión de hoy: ${sessionIndex + 1} de ${week.sessions.length}`,
+    `- Tipo de sesión: ${session.type}`,
+    `- Énfasis: ${session.emphasis}`,
+    `- Intensidad objetivo: ${session.intensity}`,
+    `- Skill focus de la semana: ${week.skillFocus}`,
+    'DIRECTIVA: Diseña el WOD siguiendo esta estructura. El tipo de sesión y la intensidad son obligatorios. Adapta el WOD al tipo indicado.',
+  ];
+
+  return lines.join('\n');
+}
+
 // --- Prompt builders ---
 
-function buildSystemInstruction(profile: Profile, feedbackContext?: string, periodizationContext?: string): string {
+function buildSystemInstruction(profile: Profile, feedbackContext?: string, periodizationContext?: string, programContext?: string): string {
   const sections = [
     `Eres un coach de CrossFit certificado de nivel elite con más de 15 años de experiencia. Tu especialidad es crear entrenamientos personalizados que se adaptan al perfil único de cada atleta.
 
@@ -86,6 +110,7 @@ PERFIL DEL ATLETA:
     buildAgeDirectives(profile),
     feedbackContext || '',
     periodizationContext || '',
+    programContext || '',
   ];
 
   return sections.filter(Boolean).join('\n\n');
@@ -287,7 +312,12 @@ export async function POST(request: NextRequest) {
   const twentyEightDaysAgo = new Date();
   twentyEightDaysAgo.setDate(twentyEightDaysAgo.getDate() - 28);
 
-  const [feedbackResult, wodsResult] = await Promise.all([
+  // Load program for current month
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+
+  const [feedbackResult, wodsResult, programResult] = await Promise.all([
     supabase
       .from('workout_feedback')
       .select('difficulty_rating, total_time_minutes, rx_or_scaled, notes, wod_snapshot, created_at')
@@ -300,6 +330,13 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.id)
       .gte('created_at', twentyEightDaysAgo.toISOString())
       .order('created_at', { ascending: false }),
+    supabase
+      .from('training_programs')
+      .select('structure')
+      .eq('user_id', user.id)
+      .eq('month', currentMonth)
+      .eq('year', currentYear)
+      .single(),
   ]);
 
   const allFeedback = (feedbackResult.data ?? []) as FeedbackRecord[];
@@ -315,9 +352,33 @@ export async function POST(request: NextRequest) {
   );
   const periodizationContext = buildPeriodizationContext(periodizationAnalysis);
 
+  // Program context (if active program exists)
+  let programContext = '';
+  if (programResult.data?.structure) {
+    const weeks = programResult.data.structure as ProgramWeek[];
+    const weekNumber = Math.min(Math.ceil(now.getDate() / 7), 4);
+
+    // Count WODs generated this week to determine current session
+    const dayOfWeek = now.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() + mondayOffset);
+    weekStart.setHours(0, 0, 0, 0);
+
+    const wodsThisWeek = allWods.filter(
+      (w) => new Date(w.created_at) >= weekStart
+    ).length;
+
+    const currentWeek = weeks.find((w) => w.number === weekNumber);
+    if (currentWeek) {
+      const sessionIndex = Math.min(wodsThisWeek, currentWeek.sessions.length - 1);
+      programContext = buildProgramContext(weeks, weekNumber, sessionIndex);
+    }
+  }
+
   // Build prompt
   const typedProfile = profile as Profile;
-  const systemInstruction = buildSystemInstruction(typedProfile, feedbackContext, periodizationContext);
+  const systemInstruction = buildSystemInstruction(typedProfile, feedbackContext, periodizationContext, programContext);
   const userPrompt = buildUserPrompt(sessionNotes);
 
   // Gemini schema (same structure as before)

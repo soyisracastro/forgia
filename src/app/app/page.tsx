@@ -13,6 +13,7 @@ import PrintWodButton from '@/components/PrintWodButton';
 import WorkoutFeedbackForm from '@/components/WorkoutFeedbackForm';
 import WorkoutAnalysis from '@/components/WorkoutAnalysis';
 import TrainingIntelligenceCard from '@/components/TrainingIntelligenceCard';
+import ProgramBanner from '@/components/ProgramBanner';
 import LiveWorkoutOverlay from '@/components/live/LiveWorkoutOverlay';
 
 // --- SVG Icons ---
@@ -233,6 +234,8 @@ export default function AppPage() {
       </div>
 
       <TrainingIntelligenceCard />
+
+      <ProgramBanner />
 
       {/* Session notes — always visible */}
       <div data-print-hide className="mb-6">
