@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { updateProfile } from '@/lib/profiles';
+import { trackProfileUpdated } from '@/lib/analytics';
 import {
   EXPERIENCE_LEVELS,
   OBJECTIVES,
@@ -10,11 +11,9 @@ import {
   CROSSFIT_EQUIPMENT_OPTIONS,
   TRAINING_FREQUENCY_OPTIONS,
 } from '@/lib/training-constants';
-import type { ExperienceLevel, Objective, EquipmentLevel } from '@/types/profile';
+import type { ExperienceLevel, Objective, EquipmentLevel, WeightUnit } from '@/types/profile';
+import SegmentedButton from '@/components/ui/SegmentedButton';
 import {
-  User,
-  Mail,
-  Calendar,
   Info,
   Circle,
   CircleDot,
@@ -27,28 +26,23 @@ import {
 import LevelAssessmentCard from '@/components/LevelAssessmentCard';
 
 interface FormData {
-  displayName: string;
   age: number | '';
   experienceLevel: ExperienceLevel | null;
   injuryHistory: string;
+  weightUnit: WeightUnit;
   objectives: Objective[];
   equipmentLevel: EquipmentLevel | null;
   trainingFrequency: number | null;
-}
-
-function formatDate(isoString: string | null): string {
-  if (!isoString) return 'No disponible';
-  return new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' }).format(new Date(isoString));
 }
 
 export default function ProfilePage() {
   const { user, profile, refreshProfile } = useAuth();
 
   const [formData, setFormData] = useState<FormData>({
-    displayName: '',
     age: '',
     experienceLevel: null,
     injuryHistory: '',
+    weightUnit: 'lbs',
     objectives: [],
     equipmentLevel: null,
     trainingFrequency: null,
@@ -62,10 +56,10 @@ export default function ProfilePage() {
   useEffect(() => {
     if (profile) {
       setFormData({
-        displayName: profile.display_name || '',
         age: profile.age ?? '',
         experienceLevel: profile.experience_level,
         injuryHistory: profile.injury_history || '',
+        weightUnit: profile.weight_unit || 'lbs',
         objectives: profile.objectives || [],
         equipmentLevel: profile.equipment_level,
         trainingFrequency: profile.training_frequency ?? null,
@@ -77,10 +71,10 @@ export default function ProfilePage() {
   const hasChanges = useMemo(() => {
     if (!profile) return false;
     return (
-      formData.displayName !== (profile.display_name || '') ||
       formData.age !== (profile.age ?? '') ||
       formData.experienceLevel !== profile.experience_level ||
       formData.injuryHistory !== (profile.injury_history || '') ||
+      formData.weightUnit !== (profile.weight_unit || 'lbs') ||
       JSON.stringify(formData.objectives) !== JSON.stringify(profile.objectives || []) ||
       formData.equipmentLevel !== profile.equipment_level ||
       formData.trainingFrequency !== (profile.training_frequency ?? null)
@@ -129,7 +123,6 @@ export default function ProfilePage() {
   // --- Validation ---
   const isFormValid = (): boolean => {
     return (
-      formData.displayName.trim() !== '' &&
       typeof formData.age === 'number' &&
       formData.age >= 13 &&
       formData.age <= 120 &&
@@ -149,17 +142,19 @@ export default function ProfilePage() {
 
     try {
       await updateProfile(user.id, {
-        display_name: formData.displayName.trim(),
+        display_name: profile?.display_name || '',
         age: formData.age as number,
         experience_level: formData.experienceLevel!,
         injury_history: formData.injuryHistory.trim() || null,
         objectives: formData.objectives,
         training_type: 'CrossFit',
         equipment_level: formData.equipmentLevel!,
+        weight_unit: formData.weightUnit,
         training_frequency: formData.trainingFrequency,
       });
 
       await refreshProfile();
+      trackProfileUpdated();
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
@@ -187,56 +182,11 @@ export default function ProfilePage() {
           Mi Perfil
         </h1>
         <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-1">
-          Administra tu cuenta y configuración de entrenamiento
+          Configura tu entrenamiento personalizado
         </p>
       </div>
 
-      {/* Section A: Account Information */}
-      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
-          <User className="w-5 h-5 text-neutral-400" />
-          Información de Cuenta
-        </h2>
-
-        {/* Email (read-only) */}
-        <div>
-          <label className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            <Mail className="w-3.5 h-3.5 text-neutral-400" />
-            Email
-          </label>
-          <div className="px-3 py-2.5 text-sm text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 rounded-lg">
-            {user?.email}
-          </div>
-        </div>
-
-        {/* Display Name (editable) */}
-        <div>
-          <label htmlFor="profile-name" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            Nombre <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="profile-name"
-            type="text"
-            value={formData.displayName}
-            onChange={(e) => updateFormField({ displayName: e.target.value })}
-            placeholder="Tu nombre"
-            className="w-full px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 ease-in-out text-sm"
-          />
-        </div>
-
-        {/* Account date */}
-        <div>
-          <label className="flex items-center gap-1.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            <Calendar className="w-3.5 h-3.5 text-neutral-400" />
-            Miembro desde
-          </label>
-          <div className="px-3 py-2.5 text-sm text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 rounded-lg">
-            {formatDate(profile.created_at)}
-          </div>
-        </div>
-      </section>
-
-      {/* Section B: Training Configuration */}
+      {/* Training Configuration */}
       <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 space-y-6">
         <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
           <svg className="w-5 h-5 text-neutral-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -261,6 +211,23 @@ export default function ProfilePage() {
             placeholder="25"
             className="w-full sm:w-32 px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 ease-in-out text-sm"
           />
+        </div>
+
+        {/* Weight Unit */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+            Unidad de peso
+          </label>
+          <div className="w-full sm:w-48">
+            <SegmentedButton
+              options={['lbs', 'kg']}
+              selected={formData.weightUnit}
+              onSelect={(v) => updateFormField({ weightUnit: v as WeightUnit })}
+            />
+          </div>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1.5">
+            Los pesos en tus WODs se mostrarán en esta unidad.
+          </p>
         </div>
 
         {/* Experience Level */}
@@ -487,21 +454,6 @@ export default function ProfilePage() {
         )}
       </button>
 
-      {/* Danger Zone */}
-      <section className="border border-neutral-200 dark:border-neutral-700 rounded-xl p-6 space-y-4">
-        <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-          Zona de Peligro
-        </h2>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-          Estas acciones son permanentes y no se pueden deshacer.
-        </p>
-        <button
-          disabled
-          className="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 border border-red-300 dark:border-red-500/30 rounded-lg opacity-50 cursor-not-allowed"
-        >
-          Eliminar cuenta (próximamente)
-        </button>
-      </section>
     </div>
   );
 }
