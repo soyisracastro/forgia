@@ -1,5 +1,7 @@
 'use client';
 
+import { trackWodPrinted } from '@/lib/analytics';
+
 const PrinterIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <polyline points="6 9 6 2 18 2 18 9" />
@@ -16,7 +18,7 @@ export default function PrintWodButton({ variant = 'default' }: PrintWodButtonPr
   if (variant === 'icon') {
     return (
       <button
-        onClick={() => window.print()}
+        onClick={() => { trackWodPrinted(); window.print(); }}
         className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors print:hidden"
         aria-label="Imprimir"
       >
@@ -27,7 +29,7 @@ export default function PrintWodButton({ variant = 'default' }: PrintWodButtonPr
 
   return (
     <button
-      onClick={() => window.print()}
+      onClick={() => { trackWodPrinted(); window.print(); }}
       className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-lg transition-colors duration-200 border border-neutral-300 dark:border-neutral-600 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900 print:hidden"
     >
       <PrinterIcon />

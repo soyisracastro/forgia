@@ -1,14 +1,16 @@
 'use client';
 
-import type { ExperienceLevel } from '@/types/profile';
+import type { ExperienceLevel, WeightUnit } from '@/types/profile';
 import { EXPERIENCE_LEVELS } from '@/lib/training-constants';
 import { User, Info, Circle, CircleDot } from 'lucide-react';
+import SegmentedButton from '@/components/ui/SegmentedButton';
 
 interface Step1Data {
   name: string;
   age: number | '';
   experienceLevel: ExperienceLevel | null;
   injuryHistory: string;
+  weightUnit: WeightUnit;
 }
 
 interface Step1Props {
@@ -59,6 +61,22 @@ export default function Step1BasicInfo({ data, onChange }: Step1Props) {
           placeholder="25"
           className="w-full px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 ease-in-out text-sm"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+          Unidad de peso
+        </label>
+        <div className="w-full sm:w-48">
+          <SegmentedButton
+            options={['lbs', 'kg']}
+            selected={data.weightUnit}
+            onSelect={(v) => onChange({ weightUnit: v as WeightUnit })}
+          />
+        </div>
+        <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1.5">
+          Los pesos en tus WODs se mostrarán en esta unidad.
+        </p>
       </div>
 
       <div>

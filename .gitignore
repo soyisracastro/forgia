@@ -42,3 +42,16 @@ next-env.d.ts
 
 # lighthouse
 .unlighthouse
+
+# supabase
+/db
+*.db
+*.sql
+*.sql.gz
+*.sql.xz
+*.sql.zst
+*.sql.tar.gz
+*.sql.tar.xz
+*.sql.tar.zst
+*.sql.zip
+*.sql.7z
