@@ -65,7 +65,9 @@ export default function RootLayout({
       >
         <ThemeProvider>{children}</ThemeProvider>
       </body>
-      <GoogleAnalytics gaId="G-Q9GFWE720C" />
+      {process.env.NEXT_PUBLIC_GA_ID && (
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+      )}
     </html>
   );
 }

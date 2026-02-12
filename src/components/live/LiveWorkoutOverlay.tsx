@@ -8,6 +8,7 @@ import { useWakeLock } from '@/hooks/useWakeLock';
 import LiveTimerDisplay from './LiveTimerDisplay';
 import LiveSectionView from './LiveSectionView';
 import LiveWorkoutSummary from './LiveWorkoutSummary';
+import { trackWorkoutCompleted } from '@/lib/analytics';
 
 type SectionKey = 'warmUp' | 'strengthSkill' | 'metcon' | 'coolDown';
 type WorkoutPhase = 'countdown' | SectionKey | 'summary';
@@ -322,6 +323,7 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
 
   const handleSummaryContinue = () => {
     const totalMinutes = Math.round(totalTimeSeconds / 60 * 10) / 10;
+    trackWorkoutCompleted(totalMinutes);
     sessionStorage.removeItem(SESSION_STORAGE_KEY);
     onFinish(totalMinutes);
   };

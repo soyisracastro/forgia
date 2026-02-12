@@ -14,6 +14,7 @@ import WorkoutFeedbackForm from '@/components/WorkoutFeedbackForm';
 import TrainingIntelligenceCard from '@/components/TrainingIntelligenceCard';
 import ProgramBanner from '@/components/ProgramBanner';
 import LiveWorkoutOverlay from '@/components/live/LiveWorkoutOverlay';
+import { trackWodGenerated, trackWodSaved, trackWorkoutStarted } from '@/lib/analytics';
 
 // --- SVG Icons ---
 
@@ -152,6 +153,7 @@ export default function AppPage() {
         sessionNotes.trim() ? { sessionNotes: sessionNotes.trim() } : undefined
       );
       setWod(newWod);
+      trackWodGenerated(user?.email || 'unknown');
     } catch (err) {
       setError(
         err instanceof Error
@@ -169,6 +171,7 @@ export default function AppPage() {
     try {
       const saved = await saveWod(user.id, wod);
       setSavedWodId(saved.id);
+      trackWodSaved();
       setJustSaved(true);
       setTimeout(() => setJustSaved(false), 2000);
     } catch (err) {
@@ -293,7 +296,7 @@ export default function AppPage() {
                   </button>
                 )}
                 <button
-                  onClick={() => setShowLiveMode(true)}
+                  onClick={() => { trackWorkoutStarted(); setShowLiveMode(true); }}
                   className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 shadow-lg shadow-red-500/25 transition-colors"
                 >
                   <PlayIcon className="h-4 w-4" />

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Wod } from '@/types/wod';
 import { formatWodAsText } from '@/lib/formatWodAsText';
+import { trackWodCopied } from '@/lib/analytics';
 
 const ClipboardIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -29,6 +30,7 @@ export default function CopyWodButton({ wod, variant = 'default' }: CopyWodButto
     const text = formatWodAsText(wod);
     await navigator.clipboard.writeText(text);
     setJustCopied(true);
+    trackWodCopied();
     setTimeout(() => setJustCopied(false), 2000);
   };
 

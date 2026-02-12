@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import type { Wod, WorkoutFeedback, WorkoutFeedbackInput, RxOrScaled } from '@/types/wod';
 import { saveFeedback } from '@/lib/wods';
 import SegmentedButton from '@/components/ui/SegmentedButton';
+import { trackFeedbackSubmitted } from '@/lib/analytics';
 
 interface WorkoutFeedbackFormProps {
   wod: Wod;
@@ -65,6 +66,7 @@ export default function WorkoutFeedbackForm({ wod, wodId, userId, onSaved, onClo
       };
 
       const saved = await saveFeedback(userId, input);
+      trackFeedbackSubmitted(difficulty, rxOrScaled);
       onSaved(saved);
     } catch (err) {
       console.error('Error saving feedback:', err);
