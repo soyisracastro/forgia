@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import type { ExperienceLevel, Objective, TrainingType, EquipmentLevel } from '@/types/profile';
+import type { ExperienceLevel, Objective, TrainingType, EquipmentLevel, WeightUnit } from '@/types/profile';
 
 export interface ProfileUpdateInput {
   display_name: string;
@@ -9,7 +9,8 @@ export interface ProfileUpdateInput {
   objectives: Objective[];
   training_type: TrainingType;
   equipment_level: EquipmentLevel;
-  training_frequency: number | null;
+  weight_unit?: WeightUnit;
+  training_frequency?: number | null;
 }
 
 export async function updateProfile(userId: string, input: ProfileUpdateInput): Promise<void> {
@@ -24,10 +25,24 @@ export async function updateProfile(userId: string, input: ProfileUpdateInput): 
       objectives: input.objectives,
       training_type: input.training_type,
       equipment_level: input.equipment_level,
-      training_frequency: input.training_frequency,
+      ...(input.weight_unit !== undefined && { weight_unit: input.weight_unit }),
+      ...(input.training_frequency !== undefined && { training_frequency: input.training_frequency }),
       updated_at: new Date().toISOString(),
     })
     .eq('id', userId);
 
   if (error) throw new Error(`Error al actualizar perfil: ${error.message}`);
+}
+
+export async function updateDisplayName(userId: string, displayName: string): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      display_name: displayName,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId);
+
+  if (error) throw new Error(`Error al actualizar nombre: ${error.message}`);
 }

@@ -1,5 +1,7 @@
 export type ExperienceLevel = 'Novato' | 'Principiante' | 'Intermedio' | 'Avanzado';
 
+export type WeightUnit = 'kg' | 'lbs';
+
 export type Objective =
   | 'Ganar fuerza'
   | 'Ganar masa muscular'
@@ -29,6 +31,7 @@ export interface Profile {
   objectives: Objective[] | null;
   training_type: TrainingType | null;
   equipment_level: EquipmentLevel | null;
+  weight_unit: WeightUnit;
   training_frequency: number | null;
   terms_accepted_at: string | null;
   created_at: string;

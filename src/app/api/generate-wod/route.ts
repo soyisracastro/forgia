@@ -80,15 +80,37 @@ function buildProgramContext(weeks: ProgramWeek[], weekNumber: number, sessionIn
   return lines.join('\n');
 }
 
+// --- Personal Records context ---
+
+interface PRRecord {
+  movement_name: string;
+  record_type: string;
+  value: number;
+  unit: string;
+}
+
+function buildPRContext(records: PRRecord[]): string {
+  if (!records.length) return '';
+
+  const lines: string[] = [
+    'RECORDS PERSONALES DEL ATLETA (1RM más recientes):',
+    ...records.map((r) => `- ${r.movement_name} ${r.record_type}: ${r.value} ${r.unit}`),
+    '',
+    'DIRECTIVA: Usa estos records para prescribir pesos específicos basados en porcentajes del 1RM cuando el movimiento coincida. Ejemplo: si Back Squat 1RM = 225 lbs, prescribir "Back Squat @ 70% (155 lbs)".',
+  ];
+
+  return lines.join('\n');
+}
+
 // --- Prompt builders ---
 
-function buildSystemInstruction(profile: Profile, feedbackContext?: string, periodizationContext?: string, programContext?: string): string {
+function buildSystemInstruction(profile: Profile, feedbackContext?: string, periodizationContext?: string, programContext?: string, prContext?: string): string {
   const sections = [
     `Eres un coach de CrossFit certificado de nivel elite con más de 15 años de experiencia. Tu especialidad es crear entrenamientos personalizados que se adaptan al perfil único de cada atleta.
 
 REGLAS ESTRICTAS:
 - Todo el contenido DEBE estar en español.
-- Los pesos se expresan en kilogramos (kg), las distancias en metros (m).
+- Los pesos se expresan en ${profile.weight_unit === 'kg' ? 'kilogramos (kg)' : 'libras (lbs)'}. Usa notación CrossFit estándar: ${profile.weight_unit === 'kg' ? "'61/43 kg' (hombres/mujeres)" : "'135/95 lbs' (hombres/mujeres)"}. Las distancias en metros (m).
 - Cada WOD debe ser único, variado, y no repetir patrones obvios.
 - El WOD debe ser realista y ejecutable en una sesión de 45-60 minutos.
 - Siempre incluir opciones de escalado en las notas cuando sea apropiado.
@@ -111,6 +133,7 @@ PERFIL DEL ATLETA:
     feedbackContext || '',
     periodizationContext || '',
     programContext || '',
+    prContext || '',
   ];
 
   return sections.filter(Boolean).join('\n\n');
@@ -317,7 +340,7 @@ export async function POST(request: NextRequest) {
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
 
-  const [feedbackResult, wodsResult, programResult] = await Promise.all([
+  const [feedbackResult, wodsResult, programResult, prResult] = await Promise.all([
     supabase
       .from('workout_feedback')
       .select('difficulty_rating, total_time_minutes, rx_or_scaled, notes, wod_snapshot, created_at')
@@ -337,10 +360,26 @@ export async function POST(request: NextRequest) {
       .eq('month', currentMonth)
       .eq('year', currentYear)
       .single(),
+    supabase
+      .from('personal_records')
+      .select('movement_name, record_type, value, unit')
+      .eq('user_id', user.id)
+      .eq('record_type', '1RM')
+      .order('date_achieved', { ascending: false }),
   ]);
 
   const allFeedback = (feedbackResult.data ?? []) as FeedbackRecord[];
   const allWods = (wodsResult.data ?? []) as WodRecord[];
+
+  // Deduplicate PRs: keep only most recent 1RM per movement
+  const prSeen = new Set<string>();
+  const bestPRs: PRRecord[] = [];
+  for (const pr of (prResult.data ?? []) as PRRecord[]) {
+    if (!prSeen.has(pr.movement_name)) {
+      prSeen.add(pr.movement_name);
+      bestPRs.push(pr);
+    }
+  }
 
   // Existing feedback context (last 5 for backward compatibility)
   const feedbackContext = buildFeedbackContext(allFeedback.slice(0, 5));
@@ -378,7 +417,8 @@ export async function POST(request: NextRequest) {
 
   // Build prompt
   const typedProfile = profile as Profile;
-  const systemInstruction = buildSystemInstruction(typedProfile, feedbackContext, periodizationContext, programContext);
+  const prContext = buildPRContext(bestPRs);
+  const systemInstruction = buildSystemInstruction(typedProfile, feedbackContext, periodizationContext, programContext, prContext);
   const userPrompt = buildUserPrompt(sessionNotes);
 
   // Gemini schema (same structure as before)
@@ -412,7 +452,7 @@ export async function POST(request: NextRequest) {
           title: { type: Type.STRING, description: "Debe ser 'Metcon'" },
           type: { type: Type.STRING, description: "Tipo de entrenamiento: 'AMRAP', 'For Time', 'EMOM', 'Tabata', etc." },
           description: { type: Type.STRING, description: "Una descripción concisa de la estructura del metcon, ej. '21-15-9 reps de:' o 'AMRAP en 20 minutos:'." },
-          movements: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Lista de movimientos con repeticiones/pesos, ej. 'Peso Muerto (102/70 kg)', 'Burpee Box Jump Overs (60/50 cm)'." },
+          movements: { type: Type.ARRAY, items: { type: Type.STRING }, description: `Lista de movimientos con repeticiones/pesos, ej. ${typedProfile.weight_unit === 'kg' ? "'Peso Muerto (102/70 kg)'" : "'Peso Muerto (225/155 lbs)'"}, 'Burpee Box Jump Overs (60/50 cm)'.` },
           notes: { type: Type.STRING, description: 'Notas opcionales, opciones de escalado o límites de tiempo.' },
         },
         required: ['title', 'type', 'description', 'movements'],

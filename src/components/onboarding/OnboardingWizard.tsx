@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/lib/supabase/client';
-import type { ExperienceLevel, Objective, EquipmentLevel } from '@/types/profile';
+import type { ExperienceLevel, Objective, EquipmentLevel, WeightUnit } from '@/types/profile';
 import { ArrowRight } from 'lucide-react';
+import { trackSignupComplete, trackOnboardingStep } from '@/lib/analytics';
 import StepIndicator from './StepIndicator';
 import Step1BasicInfo from './Step1BasicInfo';
 import Step2Objectives from './Step2Objectives';
@@ -17,6 +18,7 @@ interface FormData {
   age: number | '';
   experienceLevel: ExperienceLevel | null;
   injuryHistory: string;
+  weightUnit: WeightUnit;
   objectives: Objective[];
   equipmentLevel: EquipmentLevel | null;
   trainingFrequency: number | null;
@@ -34,6 +36,7 @@ export default function OnboardingWizard() {
     age: '',
     experienceLevel: null,
     injuryHistory: '',
+    weightUnit: 'lbs' as WeightUnit,
     objectives: [],
     equipmentLevel: null,
     trainingFrequency: null,
@@ -66,7 +69,9 @@ export default function OnboardingWizard() {
 
   const handleNext = () => {
     if (isStepValid(currentStep) && currentStep < 4) {
-      setCurrentStep((prev) => prev + 1);
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      trackOnboardingStep(nextStep);
     }
   };
 
@@ -96,6 +101,7 @@ export default function OnboardingWizard() {
         objectives: formData.objectives,
         training_type: 'CrossFit',
         equipment_level: formData.equipmentLevel,
+        weight_unit: formData.weightUnit,
         training_frequency: formData.trainingFrequency,
         onboarding_completed: true,
       });
@@ -107,6 +113,7 @@ export default function OnboardingWizard() {
     }
 
     await refreshProfile();
+    trackSignupComplete();
     router.push('/app');
   };
 
@@ -120,6 +127,7 @@ export default function OnboardingWizard() {
               age: formData.age,
               experienceLevel: formData.experienceLevel,
               injuryHistory: formData.injuryHistory,
+              weightUnit: formData.weightUnit,
             }}
             onChange={(updates) => updateFormData(updates)}
           />
