@@ -3,36 +3,29 @@
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { CalendarRange, Trophy, Flame, Dumbbell } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 
 const features = [
   {
-    title: 'WODs con IA',
-    description: 'Entrenamientos generados por inteligencia artificial, únicos cada día y adaptados a tu nivel.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>
-    ),
+    title: 'Programas Mensuales',
+    description: '4 semanas periodizadas por IA: base, volumen, intensidad y deload. Tu WOD diario tiene un plan detrás.',
+    icon: <CalendarRange className="w-6 h-6" />,
   },
   {
-    title: 'Personalizado',
-    description: 'Adapta cada entrenamiento a tu equipamiento, ubicación y lesiones o limitaciones.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-    ),
+    title: 'Records y Cargas Reales',
+    description: 'Registra tus PRs y la IA prescribe pesos como porcentajes de tu 1RM. Sin adivinar, sin inventar.',
+    icon: <Trophy className="w-6 h-6" />,
   },
   {
-    title: 'Trackea tu Progreso',
-    description: 'Guarda tus entrenamientos y revisa tu historial para medir tu avance semana a semana.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    ),
+    title: 'Preparación HYROX',
+    description: 'Objetivo específico que cambia tu programación: running comprometido, fatigue sandwiches y metcons largos.',
+    icon: <Flame className="w-6 h-6" />,
   },
   {
-    title: 'Estructura Completa',
-    description: 'Calentamiento, fuerza, metcon y enfriamiento. Entrenamientos profesionales listos para ejecutar.',
-    icon: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
-    ),
+    title: 'Biblioteca de Benchmarks',
+    description: 'Fran, Murph, Grace y más. Hazlos, registra tu resultado y mide tu progreso cada vez que los repitas.',
+    icon: <Dumbbell className="w-6 h-6" />,
   },
 ];
 
