@@ -1,0 +1,111 @@
+---
+title: "Construyendo una app de fitness con IA: decisiones de diseño"
+date: "2026-06-03"
+excerpt: "Next.js, Supabase, Gemini. El stack detrás de Forgia, las decisiones que lo formaron y lo que aprendimos construyendo un coach de CrossFit con inteligencia artificial."
+tags: ["Tecnología", "Desarrollo", "Behind the scenes"]
+author: "Forgia"
+---
+
+Forgia empezó como una pregunta: "¿Puede una IA generar entrenamientos de CrossFit que no sean basura?" La respuesta requirió resolver problemas de programación deportiva, diseño de producto y arquitectura de software al mismo tiempo. Aquí compartimos las decisiones técnicas que tomamos y por qué.
+
+Este post es para la audiencia tech — desarrolladores, builders y gente curiosa sobre cómo funciona una app de IA aplicada a fitness.
+
+## El stack
+
+| Capa | Tecnología | Por qué |
+|------|-----------|---------|
+| Frontend | Next.js + React + TypeScript | App Router, Server Components, Static Generation |
+| Estilos | Tailwind CSS | Velocidad de desarrollo, dark mode nativo |
+| Base de datos | Supabase (PostgreSQL) | Auth incluido, API auto-generada, Row Level Security |
+| IA | Google Gemini | Modelo rápido, buena relación costo/calidad para texto |
+| Hosting | Vercel | Deploy automático, Edge Functions, integración natural con Next.js |
+
+### ¿Por qué Next.js y no una SPA?
+
+Forgia tiene dos caras: una parte pública (landing, blog, SEO) y una parte privada (la app, los WODs, los records). Next.js nos permite:
+
+- **Static Generation** para las páginas públicas — performance máxima, cero costo de servidor por visita
+- **Server Components** para las páginas de la app — la lógica pesada corre en el servidor, no en el navegador del usuario
+- **API Routes** para la comunicación con Gemini y Supabase — sin exponer keys al cliente
+
+Una SPA (React puro + API separada) hubiera requerido dos deploys, CORS, un servidor separado para la API, y perdería el SSG del blog y la landing.
+
+### ¿Por qué Supabase y no Firebase?
+
+PostgreSQL. Esa es la razón principal. Las queries que necesitamos para periodización (análisis de 28 días, distribución por dominio, conteo de patrones) son SQL puro — joins, aggregations, window functions. En Firestore eso sería doloroso.
+
+Además, Supabase nos da:
+
+- **Auth con email/password** — configuración mínima
+- **Row Level Security** — cada usuario solo ve sus datos, a nivel de base de datos
+- **Supabase JS client** — queries desde el frontend sin API custom para operaciones CRUD simples
+- **Server client** — para API Routes que necesitan acceso sin restricción de RLS
+
+### ¿Por qué Gemini y no GPT-4 o Claude?
+
+Para generación de WODs, necesitamos un modelo que:
+
+1. Sea rápido (el usuario espera <10 segundos)
+2. Siga instrucciones complejas con precisión (el prompt tiene muchas restricciones)
+3. Sea económico (cada WOD es una llamada a la API)
+
+Gemini ofrece buena velocidad y costo competitivo. La calidad del output depende más del prompt engineering que del modelo — un prompt bien construido con suficiente contexto produce buenos WODs en cualquier modelo moderno.
+
+## Decisiones de diseño
+
+### Todo en español
+
+Forgia está diseñada para el mercado hispanohablante. Todos los textos de la UI, mensajes de error, confirmaciones e incluso los errores de autenticación de Supabase están traducidos al español. Los términos de CrossFit que son universales (WOD, AMRAP, EMOM, Rx, PR, 1RM) se mantienen en inglés porque así los usa la comunidad.
+
+### La IA nunca toca el cliente
+
+El API key de Gemini solo existe en variables de entorno del servidor. Todas las llamadas a la IA pasan por API Routes de Next.js. El cliente solo hace fetch a `/api/generate-wod` con el contexto del usuario — nunca habla directo con Gemini.
+
+Esto nos da:
+
+- **Seguridad** — imposible extraer la key del navegador
+- **Control** — podemos limitar, cachear y validar antes de llamar al modelo
+- **Flexibilidad** — cambiar de modelo (Gemini → otro) sin tocar el frontend
+
+### Periodización como datos, no como prompts
+
+El análisis de 28 días (distribución de dominios, patrones repetidos, tendencia de fatiga) se calcula en el servidor con SQL antes de enviarlo al prompt. No le pedimos a la IA que "analice el historial" — le damos el análisis ya hecho y le decimos qué hacer con él.
+
+¿Por qué? Porque un LLM no es bueno contando. Si le das 28 días de WODs y le pides que cuente cuántas veces apareció "Pull-up", puede equivocarse. Si tú cuentas con SQL y le dices "Pull-up apareció 12 veces, está sobrerepresentado", el LLM aplica esa directiva correctamente.
+
+**Regla general:** Usa la IA para lo que es buena (generar contenido creativo siguiendo reglas) y el código para lo que el código es bueno (contar, comparar, calcular).
+
+### Mobile-first, no mobile-friendly
+
+El 80%+ de los usuarios de fitness usan el teléfono en el gym. Forgia se diseñó para usarse con una mano, en una pantalla de 375px, probablemente sudando. Cada decisión de UI pasa por el filtro: "¿funciona en un iPhone SE mojado?"
+
+Esto se traduce en:
+
+- Botones grandes (mínimo 44px de touch target)
+- Tipografía legible sin zoom
+- Scroll vertical, nunca horizontal
+- El modo en vivo (timer) usa pantalla completa con wake lock
+
+### Sin estado global complejo
+
+React Context para auth (usuario/perfil) y tema (dark/light). Todo lo demás es `useState` local. No hay Redux, no hay Zustand, no hay state machines.
+
+¿Por qué? Porque la mayoría de las páginas son independientes. La página de records no necesita saber el estado de la página de WODs. Cada ruta carga sus datos de Supabase al montar y los gestiona localmente.
+
+Para una app con más interacción en tiempo real (chat, colaboración), esto no escalaría. Para Forgia, es suficiente y dramáticamente más simple.
+
+## Lo que aprendimos
+
+### El prompt es el producto
+
+La calidad de los WODs generados no depende del modelo — depende del prompt. Iteramos más en el prompt que en cualquier otro componente. Cada restricción ("no repetir el movimiento de fuerza de ayer", "prescribir cargas como porcentaje del 1RM") es el resultado de un WOD malo que generó la versión anterior.
+
+### Los usuarios no leen, interactúan
+
+Nadie lee un manual de cómo usar la app. El onboarding tiene que ser interactivo: cada paso pide una decisión (nivel, equipo, objetivo) y el resultado (tu primer WOD) aparece inmediatamente. La gratificación instantánea es lo que retiene.
+
+### El feedback loop es todo
+
+La diferencia entre "una app que genera WODs" y "un coach con IA" es el feedback loop. Generar → Entrenar → Registrar resultado → Generar mejor. Sin el registro de feedback, cada WOD es independiente. Con él, cada WOD es una iteración sobre el anterior.
+
+Forgia no es perfecta. Es un producto en evolución que mejora con cada iteración — del código y de los datos de cada usuario que entrena con ella.

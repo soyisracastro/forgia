@@ -1,0 +1,109 @@
+---
+title: "Cómo una IA genera un entrenamiento personalizado (sin inventar)"
+date: "2026-05-27"
+excerpt: "Tu WOD no es random. Tiene 28 días de tu historial, tus records, tu feedback y tu perfil detrás. Así es como la IA convierte todo eso en un entrenamiento real."
+tags: ["Forgia", "IA", "Tecnología"]
+author: "Forgia"
+---
+
+"¿Una IA puede programar un buen entrenamiento?" Es la pregunta que más nos hacen. La respuesta corta: sí, si le das contexto suficiente. La respuesta larga: el WOD que recibes no es "dame un entrenamiento random." Es el resultado de procesar tu perfil, tu historial, tus records, tu feedback y las reglas de programación profesional de CrossFit.
+
+Aquí te explicamos cómo funciona — sin revelar código, pero con toda la transparencia de lo que pasa detrás.
+
+## El problema con los WODs genéricos
+
+Abre cualquier generador de WODs gratuito y te da algo como:
+
+> 3 rounds for time:
+> 15 Thrusters
+> 12 Pull-ups
+> 400 m Run
+
+¿Es un buen WOD? Puede ser. ¿Es bueno **para ti hoy?** Probablemente no. Porque no sabe:
+
+- ¿Cuál es tu nivel? Si eres novato, los Pull-ups y Thrusters son demasiado
+- ¿Qué hiciste ayer? Si ayer fue halterofilia pesada, hoy no deberías repetir
+- ¿Qué equipo tienes? Si entrenas en casa sin barra, este WOD no te sirve
+- ¿Cuáles son tus records? Sin ellos, "Thrusters" no tiene peso específico
+- ¿Cómo te ha ido esta semana? Si llevas 3 días al 9/10 de dificultad, necesitas bajar
+
+Un WOD sin contexto es una receta genérica. Un WOD con contexto es programación personalizada.
+
+## Lo que la IA recibe antes de generar
+
+Cuando presionas "Generar WOD" en Forgia, no le estás pidiendo al modelo que invente un entrenamiento. Le estás dando un brief detallado con toda tu información relevante:
+
+### 1. Tu perfil
+
+- Nivel de experiencia (Novato, Principiante, Intermedio, Avanzado)
+- Equipo disponible (peso corporal, básico, completo)
+- Ubicación de entrenamiento (casa, gym, box)
+- Lesiones o limitaciones activas
+- Objetivo de entrenamiento (CrossFit general, HYROX, fuerza, etc.)
+
+### 2. Tu historial de 28 días
+
+- Qué movimientos hiciste y cuántas veces
+- Distribución por dominio (halterofilia vs gimnásticos vs monostructural)
+- Distribución por patrón (push, pull, squat, hinge, core)
+- Qué movimiento de fuerza trabajaste en las últimas 2 semanas
+
+### 3. Tu feedback reciente
+
+- Dificultad percibida de las últimas 5 sesiones
+- Si hiciste Rx o Scaled
+- Notas relevantes
+- Tendencia de fatiga
+
+### 4. Tu programa mensual activo
+
+- En qué semana del mesociclo estás (base, volumen, intensidad, deload)
+- Qué enfoque tiene esta semana
+- Qué se programó los días anteriores de la semana
+
+### 5. Tus records personales
+
+- 1RM, 3RM, 5RM de cada movimiento registrado
+- Mejores tiempos en WODs benchmark
+- Datos para calcular porcentajes de trabajo
+
+## Cómo se convierte en directivas
+
+Toda esa información se transforma en instrucciones específicas. No es un dump de datos — es un brief estructurado que le dice a la IA exactamente qué hacer y qué no hacer.
+
+Ejemplos de directivas reales:
+
+- "El atleta es nivel Intermedio. Puede hacer Power Clean, Front Squat, Pull-ups kipping, Toes-to-bar. NO incluir Muscle-ups, Handstand Walk ni Squat Snatch."
+- "Últimos 28 días: halterofilia 42%, gimnásticos 33%, monostructural 25%. PRIORIZAR monostructural para balancear."
+- "Dificultad promedio de últimas 5 sesiones: 7.8/10. REDUCIR intensidad ligeramente."
+- "1RM Back Squat: 100 kg. Si incluyes Back Squat, prescribir al 70-75% (70-75 kg)."
+- "Semana 2 del mesociclo (volumen). Metcons más largos (15-20 min), cargas moderadas."
+- "Front Squat apareció 3 veces en los últimos 14 días. ROTAR a otro movimiento de squat."
+
+## Lo que la IA genera
+
+Con todo ese contexto, el modelo genera un WOD completo con los 4 bloques:
+
+1. **Calentamiento** — Movimientos de activación específicos para lo que viene en la sesión
+2. **Fuerza/Skill** — Un movimiento de fuerza con sets, reps y porcentaje basado en tu 1RM, o un skill acorde a tu nivel
+3. **Metcon** — Formato apropiado (AMRAP, EMOM, For Time) con movimientos que complementan (no repiten) la fuerza, a escala de tu nivel
+4. **Vuelta a la calma** — Estiramientos específicos para los músculos trabajados
+
+Cada movimiento tiene peso real (no "moderado"), tiempos específicos (no "varios minutos"), y opciones de escalado si tu nivel lo requiere.
+
+## Lo que la IA NO hace
+
+- **No inventa ejercicios.** Todos los movimientos están dentro del catálogo estándar de CrossFit
+- **No repite sin razón.** Si hiciste Deadlift ayer, hoy no aparece Deadlift
+- **No ignora tus limitaciones.** Si tienes lesión de hombro, los movimientos overhead se eliminan o sustituyen
+- **No decide la intensidad arbitrariamente.** Tu dificultad percibida, tu historial y tu semana del mesociclo determinan cuánto te empuja
+
+## ¿Puede una IA reemplazar a un coach?
+
+No es la pregunta correcta. Un coach humano te observa, te corrige en tiempo real, te motiva y adapta al momento. La IA no hace eso.
+
+Lo que la IA hace es **programar.** Y programar bien requiere procesar muchas variables simultáneamente — historial, periodización, balance de dominios, fatiga acumulada, equipamiento. Un coach excelente hace esto mentalmente para 10-20 atletas. La IA lo hace computacionalmente para cada usuario individual, con 28 días de datos.
+
+Lo ideal: un coach que te observa + una IA que programa. Lo práctico cuando no tienes coach: una IA que programa con todos tus datos.
+
+Eso es Forgia. No es un generador random. Es tu historial convertido en tu próximo entrenamiento.

@@ -86,7 +86,15 @@ export default function LandingPage() {
           <span className="text-xl font-semibold text-red-500">
             Forgia
           </span>
-          <ThemeToggle />
+          <div className="flex items-center gap-4">
+            <Link
+              href="/blog"
+              className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+            >
+              Blog
+            </Link>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -270,6 +278,10 @@ export default function LandingPage() {
       <footer className="text-center py-6 text-neutral-500 text-sm border-t border-neutral-200 dark:border-neutral-800">
         <p>Impulsado por IA para superar tus límites.</p>
         <div className="flex justify-center gap-4 my-2">
+          <Link href="/blog" className="hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors">
+            Blog
+          </Link>
+          <span>|</span>
           <Link href="/privacidad" className="hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors">
             Aviso de Privacidad
           </Link>
