@@ -1,5 +1,5 @@
 ---
-name: update-message
+name: updating-message
 description: Genera mensajes de actualización para redes sociales y email cuando hay nuevas funcionalidades en Forgia. Usa este skill después de implementar features importantes.
 ---
 
@@ -27,12 +27,14 @@ Generas mensajes de comunicación profesionales y atractivos para anunciar nueva
 ## Formatos Requeridos
 
 ### 1. 📱 Mensaje Corto (Instagram/Twitter)
+
 - Máximo 280 caracteres para Twitter
 - Emojis como acentos visuales (no excesivos)
 - Hashtags: #Forgia #CrossFit #TrainingAI
 - CTA: "Pruébalo → forgia.fit"
 
 ### 2. 📧 Email a Usuarios Registrados
+
 - **Asunto**: < 60 caracteres, gancho claro
 - **Cuerpo**:
   - Saludo personalizado con `[Nombre]`
@@ -43,36 +45,43 @@ Generas mensajes de comunicación profesionales y atractivos para anunciar nueva
   - Firma: "El equipo de Forgia"
 
 ### 3. 🗣️ Mensaje para WhatsApp/Telegram
+
 - Formato con asteriscos para bold (`*texto*`)
 - Lista con ✅ para cada feature
 - Tono casual, como hablando con el equipo del box
 - CTA: "Pruébenlo → forgia.fit"
 
 ### 4. 📊 Mensaje para LinkedIn
+
 - Tono profesional y técnico (sin ser aburrido)
 - Enfoque en decisiones de producto y diseño
 - Sin emojis excesivos, usar 🔹 para bullets
 - Hashtags profesionales: #ProductDevelopment #CrossFit #AI #Fitness
 
 ### 5. 🎯 Puntos Clave
+
 - **LO QUE LES IMPORTA**: 4-6 puntos desde la perspectiva del usuario
 - **LO QUE NO LES IMPORTA**: Lo técnico que NO hay que mencionar (migrations, APIs, componentes internos, etc.)
 
 ### 6. 📅 Timing Sugerido
+
 - Orden de publicación recomendado por canal
 
 ### 7. 🎨 Assets Recomendados
+
 - Screenshots o GIFs sugeridos para acompañar los posts
 
 ## Reglas de Tono
 
 **SÍ:**
+
 - Beneficios concretos ("ahora puedes X")
 - Lenguaje de acción ("pruébalo", "entra", "configura")
 - Emojis con propósito (🔥 para algo nuevo, ✅ para features, 💪 para motivación)
 - Referencias al mundo CrossFit (box, WOD, benchmark, Rx)
 
 **NO:**
+
 - Jerga técnica (API, base de datos, componentes, migrations)
 - Superlativos vacíos ("increíble", "revolucionario")
 - Mencionar herramientas internas (Gemini, Supabase, Next.js)
