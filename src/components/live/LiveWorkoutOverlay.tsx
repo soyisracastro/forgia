@@ -29,6 +29,13 @@ const SECTION_EMOJIS: Record<SectionKey, string> = {
   coolDown: '💚',
 };
 
+const SECTION_PILL_ACTIVE: Record<SectionKey, string> = {
+  warmUp:        'bg-amber-500 text-white shadow-[0_0_12px_rgba(245,158,11,0.4)]',
+  strengthSkill: 'bg-blue-500 text-white shadow-[0_0_12px_rgba(59,130,246,0.4)]',
+  metcon:        'bg-red-500 text-white shadow-[0_0_12px_rgba(239,67,67,0.4)]',
+  coolDown:      'bg-emerald-500 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]',
+};
+
 const SESSION_STORAGE_KEY = 'live-workout-state';
 const RECOVERY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
@@ -415,19 +422,19 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
         </button>
 
         {/* Phase pills */}
-        <div className="flex-1 mx-4 overflow-hidden">
-          <div className="flex items-center justify-center gap-1.5 overflow-x-auto whitespace-nowrap no-scrollbar">
+        <div className="flex-1 mx-4">
+          <div className="flex items-center justify-center gap-2">
             {SECTION_ORDER.map((key) => (
-              <span
-                key={key}
-                className={
-                  key === phase
-                    ? 'bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-[0_0_12px_rgba(239,67,67,0.4)]'
-                    : 'text-white/40 text-xs font-medium px-2 py-1 rounded-full border border-transparent'
-                }
-              >
-                {SECTION_LABELS[key]}
-              </span>
+              key === phase ? (
+                <span
+                  key={key}
+                  className={`${SECTION_PILL_ACTIVE[key]} text-xs font-bold px-3 py-1.5 rounded-full`}
+                >
+                  {SECTION_LABELS[key]}
+                </span>
+              ) : (
+                <span key={key} className="size-2 rounded-full bg-white/20 shrink-0" />
+              )
             ))}
           </div>
         </div>

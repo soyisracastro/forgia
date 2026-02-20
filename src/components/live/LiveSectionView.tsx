@@ -13,14 +13,14 @@ const LiveSectionView: React.FC<LiveSectionViewProps> = ({ section }) => {
       <div className="absolute inset-0 bg-linear-to-br from-white/5 to-transparent pointer-events-none" />
 
       {/* Scrollable content area */}
-      <div className="relative z-10 p-6">
+      <div className="relative z-10 p-6 max-h-80 overflow-y-auto no-scrollbar">
         <div className="flex flex-col gap-4">
           {/* Movements list with dot indicators */}
           {items.map((item, i) => (
             <div key={i}>
               <div className="flex items-center gap-4">
                 <div className={`size-2 rounded-full shrink-0 ${i === 0 ? 'bg-red-500/80' : 'bg-white/20'}`} />
-                <span className="text-white text-base font-medium">{item}</span>
+                <span className="text-white text-xs font-medium">{item}</span>
               </div>
               {i < items.length - 1 && (
                 <div className="h-px w-full bg-white/5 mt-4" />
@@ -32,10 +32,10 @@ const LiveSectionView: React.FC<LiveSectionViewProps> = ({ section }) => {
 
       {/* Notes / Scaling info */}
       {section.notes && (
-        <div className="relative z-10 px-6 pb-4 flex justify-center">
-          <span className="text-white/30 text-xs font-medium bg-white/5 px-3 py-2 rounded-lg">
+        <div className="relative z-10 px-6 pt-3 pb-6 border-t border-white/5">
+          <div className="text-amber-400/80 text-xs font-medium bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-lg max-h-20 overflow-y-auto no-scrollbar">
             {section.notes}
-          </span>
+          </div>
         </div>
       )}
     </div>
