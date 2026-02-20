@@ -17,6 +17,7 @@ export type TrainingType = 'CrossFit';
 export type CrossFitEquipment =
   | 'Box completo'
   | 'Box equipado básico'
+  | 'Gimnasio tradicional'
   | 'Peso corporal + equipamiento mínimo';
 
 export type EquipmentLevel = CrossFitEquipment;
