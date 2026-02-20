@@ -74,6 +74,13 @@ html {
   animation: confetti-fall linear forwards;
 }
 
+/* Prevent iOS Safari auto-zoom on input focus (triggers when font-size < 16px) */
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 @media print {
   body {
     background: white !important;
