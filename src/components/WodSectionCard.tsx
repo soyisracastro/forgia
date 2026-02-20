@@ -98,16 +98,16 @@ function renderMetconItems(items: string[]) {
         return (
           <div
             key={index}
-            className="flex items-center justify-between py-3 border-b border-neutral-200/40 dark:border-neutral-700/30 last:border-b-0"
+            className="flex items-center gap-3 py-3 border-b border-neutral-200/40 dark:border-neutral-700/30 last:border-b-0"
           >
-            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
-              {match ? match[2] : item}
-            </span>
             {match && (
-              <span className="text-sm font-bold text-red-500 shrink-0 ml-3">
+              <span className="text-sm font-bold text-red-500 shrink-0 w-12 text-right">
                 {match[1].trim()}
               </span>
             )}
+            <span className="text-sm font-medium text-neutral-700 dark:text-neutral-200">
+              {match ? match[2] : item}
+            </span>
           </div>
         );
       })}

@@ -158,6 +158,8 @@ export default function LoginPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      autoCorrect="off"
+                      autoCapitalize="none"
                       className="block w-full pl-10 pr-3 py-3.5 bg-white dark:bg-[#221010] border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all text-sm"
                       placeholder="hola@ejemplo.com"
                     />
@@ -258,6 +260,8 @@ export default function LoginPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      autoCorrect="off"
+                      autoCapitalize="none"
                       className="block w-full pl-10 pr-3 py-3.5 bg-white dark:bg-[#221010] border border-neutral-200 dark:border-neutral-700 rounded-xl text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all text-sm"
                       placeholder="hola@ejemplo.com"
                     />
