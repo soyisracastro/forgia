@@ -13,6 +13,7 @@ const errorTranslations: Record<string, string> = {
   'Unable to validate email address: invalid format': 'El formato del correo electrónico no es válido.',
   'email rate limit exceeded': 'Has excedido el límite de intentos. Intenta de nuevo más tarde.',
   'For security purposes, you can only request this once every 60 seconds': 'Por seguridad, solo puedes intentar esto una vez cada 60 segundos.',
+  'Error sending recovery email': 'Error al enviar el correo de recuperación. Verifica que el correo esté registrado e intenta de nuevo.',
 };
 
 function translateError(message: string): string {
