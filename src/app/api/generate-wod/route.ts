@@ -189,6 +189,15 @@ function buildEquipmentDirectives(profile: Profile): string {
 - Equipamiento disponible: barra olímpica, discos, mancuernas, kettlebells, cajas pliométricas, bandas.
 - NO incluir: remadora, esquí erg, assault bike, anillas, cuerdas de trepar.
 - Sustituir cardio con: correr, burpees, saltar cuerda, shuttle runs.`;
+    case 'Gimnasio tradicional':
+      return `EQUIPAMIENTO - GIMNASIO TRADICIONAL:
+- Equipamiento disponible: mancuernas, barras, bancos planos/inclinados, barra de dominadas (pull-up bar), máquinas de cable/poleas, caminadora o bicicleta estacionaria.
+- Puede incluir: kettlebells si están disponibles, bandas de resistencia, banco para step-ups.
+- NO incluir: wall balls, assault bike, remo (rower), anillas, cuerdas de trepar, cajas pliométricas, GHD, rig.
+- ENFOQUE FUNCIONAL: Diseñar entrenamientos que introduzcan al atleta en movimientos funcionales utilizando el equipamiento de gimnasio disponible.
+- Sustituir: box jumps → step-ups al banco, wall balls → dumbbell thrusters, rowing → caminadora o bicicleta estacionaria.
+- Priorizar: push-ups, pull-ups, overhead squats (con mancuernas o barra), toes-to-bar, lunges, dumbbell snatches/cleans, farmer carries.
+- Objetivo: construir la base funcional que prepare al atleta para eventualmente hacer CrossFit completo.`;
     case 'Peso corporal + equipamiento mínimo':
       return `EQUIPAMIENTO - MÍNIMO / PESO CORPORAL:
 - Ejercicios principalmente con peso corporal.

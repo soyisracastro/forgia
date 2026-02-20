@@ -6,6 +6,7 @@ import type {
   CrossFitEquipment,
 } from '@/types/profile';
 import {
+  Building2,
   Dumbbell,
   HeartPulse,
   Scale,
@@ -71,6 +72,12 @@ export const CROSSFIT_EQUIPMENT_OPTIONS: EquipmentOption[] = [
     title: 'Box equipado básico',
     description: 'Barra, mancuernas, discos, cajas, kettlebells. Sin máquinas de cardio ni anillas.',
     icon: Warehouse,
+  },
+  {
+    value: 'Gimnasio tradicional' as CrossFitEquipment,
+    title: 'Gimnasio tradicional',
+    description: 'Mancuernas, barras, bancos, barra de dominadas y máquinas de cardio. Sin equipamiento especializado de CrossFit.',
+    icon: Building2,
   },
   {
     value: 'Peso corporal + equipamiento mínimo' as CrossFitEquipment,
