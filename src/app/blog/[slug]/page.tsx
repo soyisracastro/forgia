@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { compileMDX } from 'next-mdx-remote/rsc';
 import remarkGfm from 'remark-gfm';
+import Image from 'next/image';
 import { Calendar, Clock, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { getAllSlugs, getPostBySlug } from '@/lib/blog';
@@ -22,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const post = getPostBySlug(slug);
   if (!post) return {};
 
-  return {
+  const metadata: Metadata = {
     title: `${post.title} — Forgia Blog`,
     description: post.excerpt,
     openGraph: {
@@ -39,6 +40,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       description: post.excerpt,
     },
   };
+
+  if (post.heroImage) {
+    const imageUrl = `https://forgia.fit${post.heroImage}`;
+    metadata.openGraph!.images = [{ url: imageUrl, width: 1200, height: 675 }];
+    metadata.twitter!.images = [imageUrl];
+  }
+
+  return metadata;
 }
 
 export default async function BlogPostPage({ params }: PageProps) {
@@ -54,7 +63,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   const postUrl = `https://forgia.fit/blog/${post.slug}`;
 
-  const jsonLd = {
+  const jsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
@@ -71,6 +80,10 @@ export default async function BlogPostPage({ params }: PageProps) {
     },
     url: postUrl,
   };
+
+  if (post.heroImage) {
+    jsonLd.image = `https://forgia.fit${post.heroImage}`;
+  }
 
   return (
     <>
@@ -119,6 +132,19 @@ export default async function BlogPostPage({ params }: PageProps) {
             </span>
           </div>
         </header>
+
+        {post.heroImage && (
+          <div className="relative aspect-video rounded-xl overflow-hidden mb-8">
+            <Image
+              src={post.heroImage}
+              alt={post.title}
+              fill
+              className="object-cover"
+              priority
+              sizes="(max-width: 768px) 100vw, 768px"
+            />
+          </div>
+        )}
 
         <div className="prose-forgia">{content}</div>
 
