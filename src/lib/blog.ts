@@ -9,6 +9,10 @@ function isPublished(date: string): boolean {
   return new Date(date).getTime() <= Date.now();
 }
 
+function slugFromFilename(filename: string): string {
+  return filename.replace(/^\d{4}-\d{2}-\d{2}-/, '').replace(/\.mdx$/, '');
+}
+
 export interface BlogPostMeta {
   slug: string;
   title: string;
@@ -16,6 +20,7 @@ export interface BlogPostMeta {
   excerpt: string;
   tags: string[];
   author: string;
+  heroImage?: string;
   readingTime: string;
 }
 
@@ -27,7 +32,7 @@ export function getAllPostsMeta(): BlogPostMeta[] {
   const files = fs.readdirSync(BLOG_DIR).filter((f) => f.endsWith('.mdx'));
 
   const posts = files.map((filename) => {
-    const slug = filename.replace(/\.mdx$/, '');
+    const slug = slugFromFilename(filename);
     const filePath = path.join(BLOG_DIR, filename);
     const raw = fs.readFileSync(filePath, 'utf-8');
     const { data, content } = matter(raw);
@@ -39,7 +44,8 @@ export function getAllPostsMeta(): BlogPostMeta[] {
       date: data.date ?? '',
       excerpt: data.excerpt ?? '',
       tags: data.tags ?? [],
-      author: data.author ?? 'Forgia',
+      author: data.author ?? 'Israel Castro',
+      heroImage: data.heroImage,
       readingTime: stats.text.replace('read', 'lectura'),
     };
   });
@@ -50,9 +56,11 @@ export function getAllPostsMeta(): BlogPostMeta[] {
 }
 
 export function getPostBySlug(slug: string): BlogPost | null {
-  const filePath = path.join(BLOG_DIR, `${slug}.mdx`);
-  if (!fs.existsSync(filePath)) return null;
+  const files = fs.readdirSync(BLOG_DIR).filter((f) => f.endsWith('.mdx'));
+  const filename = files.find((f) => slugFromFilename(f) === slug);
+  if (!filename) return null;
 
+  const filePath = path.join(BLOG_DIR, filename);
   const raw = fs.readFileSync(filePath, 'utf-8');
   const { data, content } = matter(raw);
 
@@ -66,7 +74,8 @@ export function getPostBySlug(slug: string): BlogPost | null {
     date: data.date ?? '',
     excerpt: data.excerpt ?? '',
     tags: data.tags ?? [],
-    author: data.author ?? 'Forgia',
+    author: data.author ?? 'Israel Castro',
+    heroImage: data.heroImage,
     readingTime: stats.text.replace('read', 'lectura'),
     content,
   };
@@ -81,5 +90,5 @@ export function getAllSlugs(): string[] {
       const { data } = matter(raw);
       return isPublished(data.date ?? '');
     })
-    .map((f) => f.replace(/\.mdx$/, ''));
+    .map(slugFromFilename);
 }
