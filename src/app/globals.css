@@ -81,6 +81,77 @@ html {
   }
 }
 
+/* Blog footnotes (remark-gfm) */
+.prose-forgia [data-footnotes] {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-neutral-200, #e5e5e5);
+  font-size: 0.8rem;
+  color: var(--color-neutral-500, #737373);
+}
+
+.dark .prose-forgia [data-footnotes] {
+  border-top-color: var(--color-neutral-700, #404040);
+}
+
+/* Hide the auto-generated "Footnotes" heading */
+.prose-forgia [data-footnotes] > h2 {
+  display: none;
+}
+
+.prose-forgia [data-footnotes] ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+  margin: 0;
+}
+
+.prose-forgia [data-footnotes] li {
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+.prose-forgia [data-footnotes] li p {
+  display: inline;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-neutral-500, #737373);
+}
+
+.prose-forgia [data-footnotes] a {
+  color: var(--color-neutral-500, #737373);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-forgia [data-footnotes] a:hover {
+  color: var(--color-neutral-400, #a3a3a3);
+}
+
+/* Replace ↩ emoji with a simple arrow character */
+.prose-forgia [data-footnote-backref] {
+  font-family: var(--font-sans);
+  font-size: 0;
+  text-decoration: none !important;
+  margin-left: 0.25rem;
+}
+
+.prose-forgia [data-footnote-backref]::after {
+  content: "↑";
+  font-size: 0.7rem;
+}
+
+/* Superscript refs in text */
+.prose-forgia [data-footnote-ref] {
+  font-size: 0.7rem;
+  color: var(--color-neutral-400, #a3a3a3);
+  text-decoration: none;
+  vertical-align: super;
+}
+
+.prose-forgia [data-footnote-ref]:hover {
+  color: #ef4444;
+}
+
 @media print {
   body {
     background: white !important;
