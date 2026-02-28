@@ -22,6 +22,8 @@ export type CrossFitEquipment =
 
 export type EquipmentLevel = CrossFitEquipment;
 
+export type Gender = 'hombre' | 'mujer' | 'prefiero_no_definir';
+
 export type UserRole = 'user' | 'admin';
 
 export interface Profile {
@@ -37,6 +39,7 @@ export interface Profile {
   weight_unit: WeightUnit;
   training_frequency: number | null;
   terms_accepted_at: string | null;
+  gender: Gender | null;
   role: UserRole;
   created_at: string;
   updated_at: string;

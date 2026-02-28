@@ -11,7 +11,7 @@ import {
   CROSSFIT_EQUIPMENT_OPTIONS,
   TRAINING_FREQUENCY_OPTIONS,
 } from '@/lib/training-constants';
-import type { ExperienceLevel, Objective, EquipmentLevel, WeightUnit } from '@/types/profile';
+import type { ExperienceLevel, Objective, EquipmentLevel, WeightUnit, Gender } from '@/types/profile';
 import SegmentedButton from '@/components/ui/SegmentedButton';
 import {
   Info,
@@ -33,6 +33,7 @@ interface FormData {
   objectives: Objective[];
   equipmentLevel: EquipmentLevel | null;
   trainingFrequency: number | null;
+  gender: Gender | null;
 }
 
 export default function ProfilePage() {
@@ -46,6 +47,7 @@ export default function ProfilePage() {
     objectives: [],
     equipmentLevel: null,
     trainingFrequency: null,
+    gender: null,
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -63,6 +65,7 @@ export default function ProfilePage() {
         objectives: profile.objectives || [],
         equipmentLevel: profile.equipment_level,
         trainingFrequency: profile.training_frequency ?? null,
+        gender: profile.gender ?? null,
       });
     }
   }, [profile]);
@@ -77,7 +80,8 @@ export default function ProfilePage() {
       formData.weightUnit !== (profile.weight_unit || 'lbs') ||
       JSON.stringify(formData.objectives) !== JSON.stringify(profile.objectives || []) ||
       formData.equipmentLevel !== profile.equipment_level ||
-      formData.trainingFrequency !== (profile.training_frequency ?? null)
+      formData.trainingFrequency !== (profile.training_frequency ?? null) ||
+      formData.gender !== (profile.gender ?? null)
     );
   }, [formData, profile]);
 
@@ -151,6 +155,7 @@ export default function ProfilePage() {
         equipment_level: formData.equipmentLevel!,
         weight_unit: formData.weightUnit,
         training_frequency: formData.trainingFrequency,
+        gender: formData.gender,
       });
 
       await refreshProfile();
@@ -378,6 +383,47 @@ export default function ProfilePage() {
               );
             })}
           </div>
+        </div>
+
+        {/* Gender */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+            Sexo
+            <span className="text-neutral-400 font-normal ml-1">(opcional)</span>
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {([
+              { value: 'hombre' as Gender, label: 'Hombre' },
+              { value: 'mujer' as Gender, label: 'Mujer' },
+              { value: 'prefiero_no_definir' as Gender, label: 'Prefiero no definir' },
+            ]).map(({ value, label }) => {
+              const selected = formData.gender === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => updateFormField({ gender: selected ? null : value })}
+                  className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 text-left ${
+                    selected
+                      ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
+                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
+                  }`}
+                >
+                  {selected ? (
+                    <CircleDot className="w-5 h-5 text-red-500 shrink-0" />
+                  ) : (
+                    <Circle className="w-5 h-5 text-neutral-300 dark:text-neutral-600 shrink-0" />
+                  )}
+                  <span className={`text-sm font-medium ${selected ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'}`}>
+                    {label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1.5">
+            Se usa para personalizar pesos y estándares en competiciones como el Open.
+          </p>
         </div>
 
         {/* Training Frequency */}

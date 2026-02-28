@@ -47,3 +47,13 @@ export function trackWodCopied(): void {
 export function trackWodPrinted(): void {
   trackEvent('wod_printed');
 }
+
+// --- Open 2026 events ---
+
+export function trackOpenWorkoutViewed(division: string, gender: string): void {
+  trackEvent('open_workout_viewed', { division, gender });
+}
+
+export function trackOpenWorkoutStarted(division: string): void {
+  trackEvent('open_workout_started', { division });
+}
