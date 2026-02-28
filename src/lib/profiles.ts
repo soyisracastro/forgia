@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
-import type { ExperienceLevel, Objective, TrainingType, EquipmentLevel, WeightUnit } from '@/types/profile';
+import type { ExperienceLevel, Objective, TrainingType, EquipmentLevel, WeightUnit, Gender } from '@/types/profile';
 
 export interface ProfileUpdateInput {
   display_name: string;
@@ -11,6 +11,7 @@ export interface ProfileUpdateInput {
   equipment_level: EquipmentLevel;
   weight_unit?: WeightUnit;
   training_frequency?: number | null;
+  gender?: Gender | null;
 }
 
 export async function updateProfile(userId: string, input: ProfileUpdateInput): Promise<void> {
@@ -27,6 +28,7 @@ export async function updateProfile(userId: string, input: ProfileUpdateInput): 
       equipment_level: input.equipment_level,
       ...(input.weight_unit !== undefined && { weight_unit: input.weight_unit }),
       ...(input.training_frequency !== undefined && { training_frequency: input.training_frequency }),
+      ...(input.gender !== undefined && { gender: input.gender }),
       updated_at: new Date().toISOString(),
     })
     .eq('id', userId);

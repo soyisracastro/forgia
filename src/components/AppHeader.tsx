@@ -7,15 +7,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from '@/components/ThemeToggle';
 import { Menu, X, LogOut } from 'lucide-react';
-
-const navLinks = [
-  { href: '/app', label: 'WOD' },
-  { href: '/app/biblioteca', label: 'Biblioteca' },
-  { href: '/app/records', label: 'Records' },
-  { href: '/app/historia', label: 'Historia' },
-  { href: '/app/perfil', label: 'Perfil' },
-  { href: '/app/cuenta', label: 'Cuenta' },
-];
+import { isOpenSeasonActive } from '@/lib/open-workouts';
 
 export default function AppHeader() {
   const { profile, signOut } = useAuth();
@@ -24,6 +16,7 @@ export default function AppHeader() {
 
   const navLinks = [
     { href: '/app', label: 'WOD' },
+    ...(isOpenSeasonActive() ? [{ href: '/app/open', label: 'Open' }] : []),
     { href: '/app/biblioteca', label: 'Biblioteca' },
     { href: '/app/records', label: 'Records' },
     { href: '/app/historia', label: 'Historia' },
