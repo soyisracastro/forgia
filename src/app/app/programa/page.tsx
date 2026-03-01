@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import type { MonthlyProgram, ProgramWeek, ProgramSession } from '@/types/program';
 import { getActiveProgram, getWodCountThisWeek, getCurrentWeekNumber } from '@/lib/programs';
 import { generateProgram } from '@/lib/gemini';
@@ -145,7 +146,7 @@ export default function ProgramaPage() {
   const [program, setProgram] = useState<MonthlyProgram | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
   const [currentWeek, setCurrentWeek] = useState(1);
   const [wodsThisWeek, setWodsThisWeek] = useState(0);
   const [loadingPhraseIndex, setLoadingPhraseIndex] = useState(0);
@@ -182,7 +183,6 @@ export default function ProgramaPage() {
 
   const handleGenerate = useCallback(async () => {
     setGenerating(true);
-    setError(null);
     try {
       const result = await generateProgram();
       setProgram(result);
@@ -190,7 +190,7 @@ export default function ProgramaPage() {
       const count = await getWodCountThisWeek();
       setWodsThisWeek(count);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al generar el programa.');
+      toast.error(err instanceof Error ? err.message : 'Error al generar el programa.');
     } finally {
       setGenerating(false);
     }
@@ -233,13 +233,6 @@ export default function ProgramaPage() {
 
       {/* Level Assessment */}
       <LevelAssessmentCard />
-
-      {/* Error */}
-      {error && (
-        <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300">
-          {error}
-        </div>
-      )}
 
       {/* Generating state */}
       {generating && (

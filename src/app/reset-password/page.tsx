@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
@@ -10,7 +11,7 @@ export default function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+
   const [loading, setLoading] = useState(false);
 
   // Check if user arrived from valid reset link
@@ -29,7 +30,6 @@ export default function ResetPasswordPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setMessage('');
 
     if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden.');
@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
     if (error) {
       setError(error.message);
     } else {
-      setMessage('¡Contraseña actualizada correctamente! Redirigiendo...');
+      toast.success('¡Contraseña actualizada correctamente! Redirigiendo...');
       setTimeout(() => {
         window.location.href = '/app';
       }, 2000);
@@ -168,12 +168,6 @@ export default function ResetPasswordPage() {
               </div>
             )}
 
-            {/* Success Message */}
-            {message && (
-              <div className="bg-green-100 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30 text-green-700 dark:text-green-200 px-4 py-3 rounded-xl text-sm">
-                {message}
-              </div>
-            )}
 
             {/* Spacer */}
             <div className="pt-2" />

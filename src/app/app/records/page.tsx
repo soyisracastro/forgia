@@ -8,6 +8,7 @@ import { savePersonalRecord, getPersonalRecords, deletePersonalRecord } from '@/
 import { MOVEMENT_CATEGORIES, ALL_MOVEMENTS } from '@/lib/movement-constants';
 import RMCalculator from '@/components/RMCalculator';
 import SegmentedButton from '@/components/ui/SegmentedButton';
+import { toast } from 'sonner';
 import { Plus, Trash2, Trophy, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 
 // Group records by movement
@@ -102,6 +103,7 @@ export default function RecordsPage() {
 
       await savePersonalRecord(user.id, input);
       await loadRecords();
+      toast.success('PR guardado correctamente.');
 
       // Reset form
       setFormMovement('');
@@ -111,6 +113,7 @@ export default function RecordsPage() {
       setShowForm(false);
     } catch (err) {
       console.error('Error saving record:', err);
+      toast.error('No se pudo guardar el record.');
     } finally {
       setIsSaving(false);
     }
@@ -120,8 +123,10 @@ export default function RecordsPage() {
     try {
       await deletePersonalRecord(recordId);
       setRecords((prev) => prev.filter((r) => r.id !== recordId));
+      toast.success('Record eliminado.');
     } catch (err) {
       console.error('Error deleting record:', err);
+      toast.error('No se pudo eliminar el record.');
     }
   };
 

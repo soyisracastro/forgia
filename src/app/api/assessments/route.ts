@@ -18,7 +18,8 @@ export async function GET() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Error al obtener evaluaciones:', error.message);
+    return NextResponse.json({ error: 'Error al obtener evaluaciones.' }, { status: 500 });
   }
 
   return NextResponse.json(data ?? []);
@@ -33,9 +34,9 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const benchmarkId = body.benchmarkId as string;
+  const benchmarkId = body.benchmarkId;
 
-  if (!benchmarkId) {
+  if (typeof benchmarkId !== 'string' || benchmarkId.length === 0) {
     return NextResponse.json({ error: 'Falta benchmarkId.' }, { status: 400 });
   }
 
@@ -70,7 +71,8 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: `Error al crear evaluación: ${error.message}` }, { status: 500 });
+    console.error('Error al crear evaluación:', error.message);
+    return NextResponse.json({ error: 'Error al crear evaluación. Intenta de nuevo.' }, { status: 500 });
   }
 
   return NextResponse.json(data);

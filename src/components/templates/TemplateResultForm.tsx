@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import type { WodTemplate, TemplateResultInput, ScoringType } from '@/types/wod-template';
 import type { ExperienceLevel } from '@/types/profile';
 import { saveTemplateResult } from '@/lib/template-results';
@@ -82,6 +83,7 @@ export default function TemplateResultForm({ template, userId, onSaved, onClose,
       };
 
       await saveTemplateResult(userId, input);
+      toast.success('Resultado guardado correctamente.');
 
       // Check level suggestion
       if (profile?.experience_level) {
@@ -101,6 +103,7 @@ export default function TemplateResultForm({ template, userId, onSaved, onClose,
       onSaved();
     } catch (err) {
       console.error('Error saving template result:', err);
+      toast.error('No se pudo guardar el resultado.');
     } finally {
       setIsSaving(false);
     }

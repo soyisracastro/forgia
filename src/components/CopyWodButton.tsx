@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import type { Wod } from '@/types/wod';
 import { formatWodAsText } from '@/lib/formatWodAsText';
 import { trackWodCopied } from '@/lib/analytics';
@@ -31,6 +32,7 @@ export default function CopyWodButton({ wod, variant = 'default' }: CopyWodButto
     await navigator.clipboard.writeText(text);
     setJustCopied(true);
     trackWodCopied();
+    toast.success('WOD copiado al portapapeles.');
     setTimeout(() => setJustCopied(false), 2000);
   };
 

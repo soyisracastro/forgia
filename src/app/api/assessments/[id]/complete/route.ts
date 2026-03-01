@@ -57,13 +57,25 @@ export async function POST(
   }
 
   const body = await request.json();
-  const selfReport = body.selfReport as AssessmentSelfReport;
+  const selfReport = body.selfReport;
 
-  if (!selfReport) {
-    return NextResponse.json({ error: 'Falta selfReport.' }, { status: 400 });
+  if (
+    !selfReport ||
+    typeof selfReport.completed !== 'boolean' ||
+    !['Rx', 'Scaled'].includes(selfReport.rx_or_scaled)
+  ) {
+    return NextResponse.json({ error: 'Datos de reporte inválidos.' }, { status: 400 });
   }
 
-  const passed = evaluateResult(assessment.benchmark_id, selfReport);
+  const validatedReport: AssessmentSelfReport = {
+    completed: selfReport.completed,
+    total_time_minutes: typeof selfReport.total_time_minutes === 'number' ? selfReport.total_time_minutes : null,
+    rounds_or_reps: typeof selfReport.rounds_or_reps === 'string' ? selfReport.rounds_or_reps.slice(0, 100) : null,
+    rx_or_scaled: selfReport.rx_or_scaled,
+    notes: typeof selfReport.notes === 'string' ? selfReport.notes.slice(0, 500) : null,
+  };
+
+  const passed = evaluateResult(assessment.benchmark_id, validatedReport);
   const status = passed ? 'passed' : 'failed';
 
   // Update assessment
@@ -71,7 +83,7 @@ export async function POST(
     .from('level_assessments')
     .update({
       status,
-      self_report: selfReport,
+      self_report: validatedReport,
       completed_at: new Date().toISOString(),
     })
     .eq('id', id)
@@ -79,7 +91,8 @@ export async function POST(
     .single();
 
   if (updateError) {
-    return NextResponse.json({ error: `Error al actualizar: ${updateError.message}` }, { status: 500 });
+    console.error('Error al actualizar evaluación:', updateError.message);
+    return NextResponse.json({ error: 'Error al actualizar evaluación. Intenta de nuevo.' }, { status: 500 });
   }
 
   // If passed, update profile level

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { updateDisplayName } from '@/lib/profiles';
 import {
@@ -11,7 +12,6 @@ import {
   Zap,
   Save,
   Loader2,
-  Check,
 } from 'lucide-react';
 
 function formatDate(isoString: string | null): string {
@@ -24,8 +24,6 @@ export default function CuentaPage() {
 
   const [displayName, setDisplayName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     if (profile) {
@@ -40,15 +38,13 @@ export default function CuentaPage() {
     if (!user || !isValid || !hasChanges) return;
 
     setIsSaving(true);
-    setError('');
 
     try {
       await updateDisplayName(user.id, displayName.trim());
       await refreshProfile();
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      toast.success('Nombre actualizado correctamente.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar los cambios.');
+      toast.error(err instanceof Error ? err.message : 'Error al guardar los cambios.');
     } finally {
       setIsSaving(false);
     }
@@ -121,17 +117,6 @@ export default function CuentaPage() {
         {/* Save name */}
         {hasChanges && (
           <div className="pt-2">
-            {showSuccess && (
-              <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 px-4 py-3 rounded-xl text-sm mb-3">
-                <Check className="w-4 h-4 shrink-0" />
-                Nombre actualizado correctamente.
-              </div>
-            )}
-            {error && (
-              <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl text-sm mb-3">
-                {error}
-              </div>
-            )}
             <button
               onClick={handleSave}
               disabled={isSaving || !isValid}

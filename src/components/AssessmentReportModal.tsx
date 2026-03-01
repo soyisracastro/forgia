@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import type { AssessmentSelfReport, LevelAssessment } from '@/types/assessment';
 import type { BenchmarkWod } from '@/types/assessment';
 import { completeAssessment } from '@/lib/gemini';
@@ -26,7 +27,7 @@ export default function AssessmentReportModal({
   const [rxOrScaled, setRxOrScaled] = useState<'Rx' | 'Scaled'>('Rx');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
 
   const isAmrap = benchmark.wod.metcon.type?.toLowerCase().includes('amrap');
 
@@ -35,7 +36,6 @@ export default function AssessmentReportModal({
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
-    setError(null);
 
     const selfReport: AssessmentSelfReport = {
       completed: completed!,
@@ -49,7 +49,7 @@ export default function AssessmentReportModal({
       const result = await completeAssessment(assessment.id, selfReport);
       onComplete(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al enviar resultado.');
+      toast.error(err instanceof Error ? err.message : 'Error al enviar resultado.');
       setSubmitting(false);
     }
   };
@@ -149,13 +149,6 @@ export default function AssessmentReportModal({
             <span className="font-semibold">Criterio para pasar:</span> {benchmark.passingCriteria}
           </p>
         </div>
-
-        {/* Error */}
-        {error && (
-          <div className="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3">
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-          </div>
-        )}
 
         {/* Actions */}
         <div className="flex gap-3 pt-2">

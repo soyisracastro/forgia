@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import type { Wod, WorkoutFeedback } from '@/types/wod';
 import { generateWod } from '@/lib/gemini';
 import { saveWod, getLatestWod, bulkInsertWods } from '@/lib/wods';
 import { useAuth } from '@/contexts/AuthContext';
 import Spinner from '@/components/Spinner';
-import ErrorDisplay from '@/components/ErrorDisplay';
 import WodDisplay from '@/components/WodDisplay';
 import CopyWodButton from '@/components/CopyWodButton';
 import PrintWodButton from '@/components/PrintWodButton';
@@ -62,7 +62,6 @@ export default function AppPage() {
   const [wod, setWod] = useState<Wod | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingLatest, setIsLoadingLatest] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentDate, setCurrentDate] = useState('');
   const [sessionNotes, setSessionNotes] = useState('');
   const [justSaved, setJustSaved] = useState(false);
@@ -140,7 +139,7 @@ export default function AppPage() {
 
   const handleGenerate = useCallback(async () => {
     setIsLoading(true);
-    setError(null);
+
     setWod(null);
     setJustSaved(false);
     setSavedWodId(null);
@@ -155,7 +154,7 @@ export default function AppPage() {
       setWod(newWod);
       trackWodGenerated(user?.email || 'unknown');
     } catch (err) {
-      setError(
+      toast.error(
         err instanceof Error
           ? err.message
           : 'Ocurrió un error desconocido al generar el WOD.'
@@ -176,6 +175,7 @@ export default function AppPage() {
       setTimeout(() => setJustSaved(false), 2000);
     } catch (err) {
       console.error('Error saving WOD:', err);
+      toast.error('No se pudo guardar el WOD. Intenta de nuevo.');
     }
   }, [wod, user]);
 
@@ -194,9 +194,7 @@ export default function AppPage() {
         </div>
       );
     }
-    if (error) {
-      return <ErrorDisplay message={error} />;
-    }
+
     if (isLoadingLatest) {
       return (
         <div className="flex justify-center py-16">
