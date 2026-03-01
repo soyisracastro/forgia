@@ -9,6 +9,7 @@
   --font-mono: var(--font-geist-mono);
   --animate-fade-in-up: fade-in-up 0.4s ease-out both;
   --animate-timer-pulse: timer-pulse 1s ease-in-out infinite;
+  --animate-forge: forge 1.2s ease-in-out infinite;
 }
 
 html {
@@ -56,6 +57,19 @@ html {
   }
   50% {
     opacity: 0.6;
+  }
+}
+
+@keyframes forge {
+  0%, 100% {
+    transform: scale(1);
+    color: #ef4444;
+    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.6));
+  }
+  50% {
+    transform: scale(1.15);
+    color: #fbbf24;
+    filter: drop-shadow(0 0 16px rgba(245, 158, 11, 0.9));
   }
 }
 
