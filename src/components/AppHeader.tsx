@@ -8,11 +8,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import ThemeToggle from '@/components/ThemeToggle';
 import { Menu, X, LogOut } from 'lucide-react';
 import { isOpenSeasonActive } from '@/lib/open-workouts';
+import UserAvatar from '@/components/UserAvatar';
 
 export default function AppHeader() {
   const { profile, signOut } = useAuth();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   const navLinks = [
     { href: '/app', label: 'WOD' },
@@ -21,12 +23,12 @@ export default function AppHeader() {
     { href: '/app/records', label: 'Records' },
     { href: '/app/historia', label: 'Historia' },
     { href: '/app/perfil', label: 'Perfil' },
-    { href: '/app/cuenta', label: 'Cuenta' },
   ];
 
   // Close menu on route change
   useEffect(() => {
     setMenuOpen(false);
+    setProfileMenuOpen(false);
   }, [pathname]);
 
   // Prevent body scroll when menu is open
@@ -97,14 +99,17 @@ export default function AppHeader() {
             >
               Salir
             </button>
-            {/* Mobile: hamburger button */}
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="sm:hidden p-2 rounded-lg text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-              aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
-            >
-              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            {/* Mobile: theme toggle + hamburger */}
+            <div className="flex items-center gap-1 sm:hidden">
+              <ThemeToggle />
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="p-2 rounded-lg text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+              >
+                {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -134,18 +139,6 @@ export default function AppHeader() {
               </button>
             </div>
 
-            {/* Profile info */}
-            {profile && (
-              <div className="px-5 py-4 border-b border-neutral-200 dark:border-neutral-800">
-                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                  {profile.display_name || 'Atleta'}
-                </p>
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                  {profile.email}
-                </p>
-              </div>
-            )}
-
             {/* Navigation links */}
             <nav className="flex-1 py-3 overflow-y-auto">
               {navLinks.map((link) => (
@@ -164,21 +157,45 @@ export default function AppHeader() {
               ))}
             </nav>
 
-            {/* Bottom section: theme + sign out */}
-            <div className="border-t border-neutral-200 dark:border-neutral-800 px-5 py-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-neutral-500 dark:text-neutral-400">Tema</span>
-                <ThemeToggle />
-              </div>
+            {/* Bottom section: profile row with popover */}
+            <div className="relative border-t border-neutral-200 dark:border-neutral-800 px-5 py-4">
+              {/* Popover menu (expands upward) */}
+              {profileMenuOpen && (
+                <div className="absolute bottom-full left-0 right-0 mx-5 mb-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg overflow-hidden">
+                  <Link
+                    href="/app/cuenta"
+                    onClick={() => setMenuOpen(false)}
+                    className="block px-4 py-3 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+                  >
+                    Cuenta
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      signOut();
+                    }}
+                    className="flex items-center gap-2 w-full px-4 py-3 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-red-500 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+
+              {/* Profile row (tap to toggle popover) */}
               <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  signOut();
-                }}
-                className="flex items-center gap-2 w-full py-2 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-red-500 transition-colors"
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                className="flex items-center gap-3 w-full text-left"
               >
-                <LogOut className="w-4 h-4" />
-                Cerrar sesión
+                <UserAvatar displayName={profile?.display_name ?? null} size="size-10" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">
+                    {profile?.display_name || 'Atleta'}
+                  </p>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
+                    {profile?.email}
+                  </p>
+                </div>
               </button>
             </div>
           </div>
