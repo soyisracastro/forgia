@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -15,6 +15,7 @@ export default function AppHeader() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const desktopProfileRef = useRef<HTMLDivElement>(null);
 
   const navLinks = [
     { href: '/app', label: 'WOD' },
@@ -46,13 +47,28 @@ export default function AppHeader() {
   // Close on Escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setMenuOpen(false);
+      if (e.key === 'Escape') {
+        setMenuOpen(false);
+        setProfileMenuOpen(false);
+      }
     };
-    if (menuOpen) {
+    if (menuOpen || profileMenuOpen) {
       document.addEventListener('keydown', handleEscape);
       return () => document.removeEventListener('keydown', handleEscape);
     }
-  }, [menuOpen]);
+  }, [menuOpen, profileMenuOpen]);
+
+  // Close desktop profile dropdown on click outside
+  useEffect(() => {
+    if (!profileMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (desktopProfileRef.current && !desktopProfileRef.current.contains(e.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [profileMenuOpen]);
 
   return (
     <header className="py-6 border-b border-neutral-200 dark:border-neutral-800">
@@ -81,24 +97,39 @@ export default function AppHeader() {
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            {/* Desktop: profile name + theme + sign out */}
-            {profile && (
-              <Link
-                href="/app/perfil"
-                className="hidden sm:inline text-sm text-neutral-500 dark:text-neutral-400 hover:text-red-500 transition-colors"
-              >
-                {profile.display_name || profile.email}
-              </Link>
-            )}
+            {/* Desktop: theme + profile dropdown */}
             <span className="hidden sm:inline">
               <ThemeToggle />
             </span>
-            <button
-              onClick={signOut}
-              className="hidden sm:inline text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
-            >
-              Salir
-            </button>
+            <div ref={desktopProfileRef} className="relative hidden sm:block">
+              <button
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                className="text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
+              >
+                {profile?.display_name || profile?.email || 'Atleta'}
+              </button>
+              {profileMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg overflow-hidden z-50">
+                  <Link
+                    href="/app/cuenta"
+                    onClick={() => setProfileMenuOpen(false)}
+                    className="block px-4 py-3 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+                  >
+                    Cuenta
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      signOut();
+                    }}
+                    className="flex items-center gap-2 w-full px-4 py-3 text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-red-500 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
             {/* Mobile: theme toggle + hamburger */}
             <div className="flex items-center gap-1 sm:hidden">
               <ThemeToggle />
@@ -158,7 +189,7 @@ export default function AppHeader() {
             </nav>
 
             {/* Bottom section: profile row with popover */}
-            <div className="relative border-t border-neutral-200 dark:border-neutral-800 px-5 py-4">
+            <div className="relative border-t border-neutral-200 dark:border-neutral-800 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom,1rem))]">
               {/* Popover menu (expands upward) */}
               {profileMenuOpen && (
                 <div className="absolute bottom-full left-0 right-0 mx-5 mb-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl shadow-lg overflow-hidden">
