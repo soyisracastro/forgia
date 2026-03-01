@@ -218,6 +218,47 @@ export default function ProfilePage() {
           />
         </div>
 
+        {/* Gender */}
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+            Sexo
+            <span className="text-neutral-400 font-normal ml-1">(opcional)</span>
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {([
+              { value: 'hombre' as Gender, label: 'Hombre' },
+              { value: 'mujer' as Gender, label: 'Mujer' },
+              { value: 'prefiero_no_definir' as Gender, label: 'Prefiero no definir' },
+            ]).map(({ value, label }) => {
+              const selected = formData.gender === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => updateFormField({ gender: selected ? null : value })}
+                  className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 text-left ${
+                    selected
+                      ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
+                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
+                  }`}
+                >
+                  {selected ? (
+                    <CircleDot className="w-5 h-5 text-red-500 shrink-0" />
+                  ) : (
+                    <Circle className="w-5 h-5 text-neutral-300 dark:text-neutral-600 shrink-0" />
+                  )}
+                  <span className={`text-sm font-medium ${selected ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'}`}>
+                    {label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1.5">
+            Se usa para personalizar pesos y estándares en competiciones como el Open.
+          </p>
+        </div>
+
         {/* Weight Unit */}
         <div>
           <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
@@ -383,47 +424,6 @@ export default function ProfilePage() {
               );
             })}
           </div>
-        </div>
-
-        {/* Gender */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-            Sexo
-            <span className="text-neutral-400 font-normal ml-1">(opcional)</span>
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {([
-              { value: 'hombre' as Gender, label: 'Hombre' },
-              { value: 'mujer' as Gender, label: 'Mujer' },
-              { value: 'prefiero_no_definir' as Gender, label: 'Prefiero no definir' },
-            ]).map(({ value, label }) => {
-              const selected = formData.gender === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => updateFormField({ gender: selected ? null : value })}
-                  className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 text-left ${
-                    selected
-                      ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
-                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
-                  }`}
-                >
-                  {selected ? (
-                    <CircleDot className="w-5 h-5 text-red-500 shrink-0" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-neutral-300 dark:text-neutral-600 shrink-0" />
-                  )}
-                  <span className={`text-sm font-medium ${selected ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'}`}>
-                    {label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1.5">
-            Se usa para personalizar pesos y estándares en competiciones como el Open.
-          </p>
         </div>
 
         {/* Training Frequency */}

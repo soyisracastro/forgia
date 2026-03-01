@@ -54,27 +54,11 @@ function formatSpecsNote(division: OpenDivision, gender: OpenGender): string {
   return `Wall-Ball ${s.wallBallWeight} al ${s.wallBallTarget}. Box ${s.boxHeight}.`;
 }
 
-function buildMovements(division: OpenDivision, gender: OpenGender): string[] {
-  const specs = gender === 'prefiero_no_definir' ? null : getSpecs(division, gender);
-
-  const wallBallLabel = specs
-    ? `Wall-Ball Shots (${specs.wallBallWeight} al ${specs.wallBallTarget})`
-    : 'Wall-Ball Shots (ver notas para peso/altura)';
-
-  const boxLabel = specs
-    ? `Box Step-Overs (${specs.boxHeight})`
-    : 'Box Step-Overs (ver notas para altura)';
-
-  const jumpOverLabel = specs
-    ? `Box Jump-Overs (${specs.boxHeight})`
-    : 'Box Jump-Overs (ver notas para altura)';
-
-  const useStepUps = division === 'scaled' || division === 'foundations';
-  const boxMovement = useStepUps ? boxLabel : jumpOverLabel;
+function buildMovements(): string[] {
 
   return [
-    `20 ${wallBallLabel} + 6 ${boxMovement}`,
-    `30 Wall-Balls + 18 ${boxMovement}`,
+    `20 Wall-Balls`,
+    `30 Wall-Balls + 18 Box Jump-Overs`,
     `40 Wall-Balls + 18 Med-Ball Box Step-Overs`,
     `66 Wall-Balls + 18 Med-Ball Box Step-Overs`,
     '40 Wall-Balls + 18 Box Jump-Overs',
@@ -114,8 +98,9 @@ export function buildOpenWod(division: OpenDivision, gender: OpenGender): Wod {
       title: 'Open 26.1',
       type: 'For Time',
       description: 'Time Cap: 12 minutos. Estructura piramidal:',
-      movements: buildMovements(division, gender),
+      movements: buildMovements(),
       notes: `${formatSpecsNote(division, gender)} Step-down obligatorio al bajar del cajón. El balón no puede apoyarse en los muslos ni tocar el cajón durante los Step-Overs.`,
+      notesLabel: 'Estándares y Reglas',
     },
     coolDown: {
       title: 'Enfriamiento',
