@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { updateProfile } from '@/lib/profiles';
 import { trackProfileUpdated } from '@/lib/analytics';
@@ -21,7 +22,6 @@ import {
   Square,
   Save,
   Loader2,
-  Check,
 } from 'lucide-react';
 import LevelAssessmentCard from '@/components/LevelAssessmentCard';
 
@@ -55,8 +55,6 @@ export default function ProfilePage() {
   });
 
   const [isSaving, setIsSaving] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [error, setError] = useState('');
 
   // Initialize form from profile
   useEffect(() => {
@@ -150,7 +148,6 @@ export default function ProfilePage() {
     if (!user || !isFormValid()) return;
 
     setIsSaving(true);
-    setError('');
 
     try {
       await updateProfile(user.id, {
@@ -170,10 +167,9 @@ export default function ProfilePage() {
 
       await refreshProfile();
       trackProfileUpdated();
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
+      toast.success('Cambios guardados correctamente.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar los cambios.');
+      toast.error(err instanceof Error ? err.message : 'Error al guardar los cambios.');
     } finally {
       setIsSaving(false);
     }
@@ -514,21 +510,6 @@ export default function ProfilePage() {
 
       {/* Level Assessment */}
       <LevelAssessmentCard />
-
-      {/* Success message */}
-      {showSuccess && (
-        <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300 px-4 py-3 rounded-xl text-sm">
-          <Check className="w-4 h-4 shrink-0" />
-          Cambios guardados correctamente.
-        </div>
-      )}
-
-      {/* Error message */}
-      {error && (
-        <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl text-sm">
-          {error}
-        </div>
-      )}
 
       {/* Save button */}
       <button
