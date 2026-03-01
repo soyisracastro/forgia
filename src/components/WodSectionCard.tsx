@@ -128,13 +128,13 @@ function renderBulletItems(items: string[], sectionType: SectionType) {
   );
 }
 
-function renderStrategyTip(notes: string) {
+function renderStrategyTip(notes: string, label?: string) {
   return (
     <div className="mt-4 flex items-start gap-2.5 p-3 bg-amber-500/5 dark:bg-amber-500/10 rounded-lg border border-amber-500/20">
       <WarningIcon className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
       <div>
         <p className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-0.5">
-          Estrategia
+          {label || 'Estrategia'}
         </p>
         <p className="text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">{notes}</p>
       </div>
@@ -213,7 +213,7 @@ const WodSectionCard: React.FC<WodSectionCardProps> = ({ section, sectionType, a
         )}
 
         {/* Metcon: strategy tip from notes */}
-        {isMetcon && section.notes && renderStrategyTip(section.notes)}
+        {isMetcon && section.notes && renderStrategyTip(section.notes, section.notesLabel)}
 
         {/* Non-metcon: regular notes */}
         {!isMetcon && section.notes && (

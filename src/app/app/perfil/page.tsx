@@ -27,6 +27,8 @@ import LevelAssessmentCard from '@/components/LevelAssessmentCard';
 
 interface FormData {
   age: number | '';
+  weight: number | '';
+  height: number | '';
   experienceLevel: ExperienceLevel | null;
   injuryHistory: string;
   weightUnit: WeightUnit;
@@ -41,6 +43,8 @@ export default function ProfilePage() {
 
   const [formData, setFormData] = useState<FormData>({
     age: '',
+    weight: '',
+    height: '',
     experienceLevel: null,
     injuryHistory: '',
     weightUnit: 'lbs',
@@ -59,6 +63,8 @@ export default function ProfilePage() {
     if (profile) {
       setFormData({
         age: profile.age ?? '',
+        weight: profile.weight ?? '',
+        height: profile.height ?? '',
         experienceLevel: profile.experience_level,
         injuryHistory: profile.injury_history || '',
         weightUnit: profile.weight_unit || 'lbs',
@@ -75,6 +81,8 @@ export default function ProfilePage() {
     if (!profile) return false;
     return (
       formData.age !== (profile.age ?? '') ||
+      formData.weight !== (profile.weight ?? '') ||
+      formData.height !== (profile.height ?? '') ||
       formData.experienceLevel !== profile.experience_level ||
       formData.injuryHistory !== (profile.injury_history || '') ||
       formData.weightUnit !== (profile.weight_unit || 'lbs') ||
@@ -156,6 +164,8 @@ export default function ProfilePage() {
         weight_unit: formData.weightUnit,
         training_frequency: formData.trainingFrequency,
         gender: formData.gender,
+        weight: formData.weight === '' ? null : formData.weight,
+        height: formData.height === '' ? null : formData.height,
       });
 
       await refreshProfile();
@@ -201,21 +211,101 @@ export default function ProfilePage() {
           Configuración de Entrenamiento
         </h2>
 
-        {/* Age */}
-        <div>
-          <label htmlFor="profile-age" className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-            Edad <span className="text-red-500">*</span>
+        {/* Datos Físicos */}
+        <div className="space-y-4">
+          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
+            Datos Físicos
           </label>
-          <input
-            id="profile-age"
-            type="number"
-            min={13}
-            max={120}
-            value={formData.age}
-            onChange={(e) => updateFormField({ age: e.target.value === '' ? '' : Number(e.target.value) })}
-            placeholder="25"
-            className="w-full sm:w-32 px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 ease-in-out text-sm"
-          />
+
+          {/* Age + Weight + Height row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="profile-age" className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1.5">
+                Edad <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="profile-age"
+                type="number"
+                min={13}
+                max={120}
+                value={formData.age}
+                onChange={(e) => updateFormField({ age: e.target.value === '' ? '' : Number(e.target.value) })}
+                placeholder="25"
+                className="w-full px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 ease-in-out text-sm"
+              />
+            </div>
+            <div>
+              <label htmlFor="profile-weight" className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1.5">
+                Peso (kg)
+              </label>
+              <input
+                id="profile-weight"
+                type="number"
+                min={30}
+                max={300}
+                value={formData.weight}
+                onChange={(e) => updateFormField({ weight: e.target.value === '' ? '' : Number(e.target.value) })}
+                placeholder="75"
+                className="w-full px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 ease-in-out text-sm"
+              />
+            </div>
+            <div>
+              <label htmlFor="profile-height" className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1.5">
+                Altura (cm)
+              </label>
+              <input
+                id="profile-height"
+                type="number"
+                min={100}
+                max={250}
+                value={formData.height}
+                onChange={(e) => updateFormField({ height: e.target.value === '' ? '' : Number(e.target.value) })}
+                placeholder="170"
+                className="w-full px-3 py-2.5 bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 ease-in-out text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Gender */}
+          <div>
+            <label className="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2">
+              Sexo
+              <span className="text-neutral-400 font-normal ml-1">(opcional)</span>
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {([
+                { value: 'hombre' as Gender, label: 'Hombre' },
+                { value: 'mujer' as Gender, label: 'Mujer' },
+                { value: 'prefiero_no_definir' as Gender, label: 'Prefiero no definir' },
+              ]).map(({ value, label }) => {
+                const selected = formData.gender === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => updateFormField({ gender: selected ? null : value })}
+                    className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 text-left ${
+                      selected
+                        ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
+                        : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
+                    }`}
+                  >
+                    {selected ? (
+                      <CircleDot className="w-5 h-5 text-red-500 shrink-0" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-neutral-300 dark:text-neutral-600 shrink-0" />
+                    )}
+                    <span className={`text-sm font-medium ${selected ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'}`}>
+                      {label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1.5">
+              Se usa para personalizar pesos, estándares y cargas en tus entrenamientos.
+            </p>
+          </div>
         </div>
 
         {/* Weight Unit */}
@@ -383,47 +473,6 @@ export default function ProfilePage() {
               );
             })}
           </div>
-        </div>
-
-        {/* Gender */}
-        <div>
-          <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
-            Sexo
-            <span className="text-neutral-400 font-normal ml-1">(opcional)</span>
-          </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {([
-              { value: 'hombre' as Gender, label: 'Hombre' },
-              { value: 'mujer' as Gender, label: 'Mujer' },
-              { value: 'prefiero_no_definir' as Gender, label: 'Prefiero no definir' },
-            ]).map(({ value, label }) => {
-              const selected = formData.gender === value;
-              return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => updateFormField({ gender: selected ? null : value })}
-                  className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 text-left ${
-                    selected
-                      ? 'border-red-500 bg-red-50 dark:bg-red-500/10'
-                      : 'border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600'
-                  }`}
-                >
-                  {selected ? (
-                    <CircleDot className="w-5 h-5 text-red-500 shrink-0" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-neutral-300 dark:text-neutral-600 shrink-0" />
-                  )}
-                  <span className={`text-sm font-medium ${selected ? 'text-red-600 dark:text-red-400' : 'text-neutral-900 dark:text-neutral-100'}`}>
-                    {label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <p className="text-xs text-neutral-400 dark:text-neutral-500 mt-1.5">
-            Se usa para personalizar pesos y estándares en competiciones como el Open.
-          </p>
         </div>
 
         {/* Training Frequency */}

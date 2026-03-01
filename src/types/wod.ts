@@ -7,6 +7,7 @@ export interface WodSection {
   description?: string;
   movements?: string[];
   notes?: string;
+  notesLabel?: string;
 }
 
 export interface Wod {

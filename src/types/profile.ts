@@ -40,6 +40,8 @@ export interface Profile {
   training_frequency: number | null;
   terms_accepted_at: string | null;
   gender: Gender | null;
+  weight: number | null;
+  height: number | null;
   role: UserRole;
   created_at: string;
   updated_at: string;
