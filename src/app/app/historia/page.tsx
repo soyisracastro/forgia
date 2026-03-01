@@ -4,14 +4,17 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import type { SavedWod, WorkoutFeedback } from '@/types/wod';
 import { getWodHistory, deleteWod, getFeedbackForWod, getWodIdsWithFeedback } from '@/lib/wods';
+import { useAuth } from '@/contexts/AuthContext';
 import SegmentedButton from '@/components/ui/SegmentedButton';
 import WodListView from '@/components/WodListView';
 import CalendarView from '@/components/CalendarView';
+import WorkoutFeedbackForm from '@/components/WorkoutFeedbackForm';
 import Spinner from '@/components/Spinner';
 
 type ViewMode = 'Lista' | 'Calendario';
 
 export default function HistoriaPage() {
+  const { user } = useAuth();
   const [savedWods, setSavedWods] = useState<SavedWod[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,6 +22,7 @@ export default function HistoriaPage() {
   const [loadingFeedback, setLoadingFeedback] = useState<Record<string, boolean>>({});
   const [wodsWithFeedback, setWodsWithFeedback] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<ViewMode>('Lista');
+  const [feedbackTarget, setFeedbackTarget] = useState<SavedWod | null>(null);
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -64,6 +68,15 @@ export default function HistoriaPage() {
       console.error('Error deleting WOD:', e);
     }
   }, []);
+
+  const handleFeedbackSaved = useCallback((feedback: WorkoutFeedback) => {
+    const wodId = feedbackTarget?.id;
+    if (wodId) {
+      setFeedbackMap((prev) => ({ ...prev, [wodId]: feedback }));
+      setWodsWithFeedback((prev) => new Set(prev).add(wodId));
+    }
+    setFeedbackTarget(null);
+  }, [feedbackTarget]);
 
   return (
     <>
@@ -117,10 +130,21 @@ export default function HistoriaPage() {
               expandedId={expandedId}
               onExpand={handleExpand}
               onDelete={handleDelete}
+              onRegisterFeedback={setFeedbackTarget}
               wodsWithFeedback={wodsWithFeedback}
             />
           )}
         </>
+      )}
+
+      {feedbackTarget && user && (
+        <WorkoutFeedbackForm
+          wod={feedbackTarget.wod}
+          wodId={feedbackTarget.id}
+          userId={user.id}
+          onSaved={handleFeedbackSaved}
+          onClose={() => setFeedbackTarget(null)}
+        />
       )}
     </>
   );

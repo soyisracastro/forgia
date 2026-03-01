@@ -15,6 +15,7 @@ interface CalendarViewProps {
   expandedId: string | null;
   onExpand: (wodId: string) => void;
   onDelete: (id: string) => void;
+  onRegisterFeedback: (saved: SavedWod) => void;
   wodsWithFeedback: Set<string>;
 }
 
@@ -65,12 +66,12 @@ export default function CalendarView({
   expandedId,
   onExpand,
   onDelete,
+  onRegisterFeedback,
   wodsWithFeedback,
 }: CalendarViewProps) {
   const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
-  const [showWodDetail, setShowWodDetail] = useState<string | null>(null);
 
   const wodsByDate = useMemo(() => groupWodsByDate(savedWods), [savedWods]);
   const calendarDays = useMemo(() => getCalendarDays(currentYear, currentMonth), [currentYear, currentMonth]);
@@ -170,11 +171,12 @@ export default function CalendarView({
                 ${dayInfo.isCurrentMonth && !hasWods ? 'text-neutral-500 dark:text-neutral-400 cursor-default' : ''}
                 ${hasWods ? 'cursor-pointer font-bold text-neutral-900 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800/50' : ''}
                 ${isSelected ? 'bg-red-500/10 dark:bg-red-500/20 ring-2 ring-red-500' : ''}
-                ${isToday && !isSelected ? 'bg-neutral-100 dark:bg-neutral-800/50' : ''}
+                ${hasFeedback && !isSelected ? 'bg-emerald-50 dark:bg-emerald-500/10' : ''}
+                ${isToday && !isSelected && !hasFeedback ? 'bg-neutral-100 dark:bg-neutral-800/50' : ''}
               `}
             >
               <span>{dayInfo.date.getDate()}</span>
-              {hasWods && (
+              {hasWods && !hasFeedback && (
                 <div className="flex gap-0.5 mt-0.5">
                   {dayWods.slice(0, 3).map((_, i) => (
                     <span key={i} className="w-1.5 h-1.5 rounded-full bg-red-500" />
@@ -183,9 +185,6 @@ export default function CalendarView({
                     <span className="text-[9px] text-red-500 font-bold leading-none">+</span>
                   )}
                 </div>
-              )}
-              {hasFeedback && (
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-500" />
               )}
             </button>
           );
@@ -201,11 +200,11 @@ export default function CalendarView({
       <div className="flex items-center justify-center gap-6 text-xs text-neutral-500 dark:text-neutral-400">
         <div className="flex items-center gap-1.5">
           <span className="size-2 rounded-full bg-red-500" />
-          <span>WOD guardado</span>
+          <span>Sin feedback</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="size-2 rounded-full bg-emerald-500" />
-          <span>Con feedback</span>
+          <span className="size-3 rounded-sm bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/30" />
+          <span>Feedback completado</span>
         </div>
       </div>
 
@@ -232,14 +231,13 @@ export default function CalendarView({
                 </h3>
 
                 {/* Metcon info line */}
-                <div className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
-                  <FireIcon />
-                  <span className="font-medium">{metconSummary}</span>
+                <div className="flex flex-col gap-1 text-sm text-neutral-500 dark:text-neutral-400">
+                  <div className="flex items-center gap-2">
+                    <FireIcon />
+                    <span className="font-medium">{metconSummary}</span>
+                  </div>
                   {movementsSummary && (
-                    <>
-                      <span>&middot;</span>
-                      <span>{movementsSummary}</span>
-                    </>
+                    <span>{movementsSummary}</span>
                   )}
                 </div>
 
@@ -263,13 +261,10 @@ export default function CalendarView({
                 {/* Action buttons */}
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => {
-                      onExpand(saved.id);
-                      setShowWodDetail(showWodDetail === saved.id ? null : saved.id);
-                    }}
+                    onClick={() => onExpand(saved.id)}
                     className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-sm font-semibold transition-colors"
                   >
-                    Ver WOD completo
+                    {expandedId === saved.id ? 'Ocultar WOD' : 'Ver WOD completo'}
                   </button>
                   {hasFbLoaded ? (
                     <button
@@ -287,16 +282,16 @@ export default function CalendarView({
                     </button>
                   ) : (
                     <button
-                      disabled
-                      className="flex items-center justify-center gap-2 py-2.5 rounded-lg bg-neutral-200 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500 text-sm font-semibold cursor-not-allowed"
+                      onClick={() => onRegisterFeedback(saved)}
+                      className="flex items-center justify-center gap-2 py-2.5 rounded-lg border border-red-500 text-red-500 hover:bg-red-500/10 text-sm font-semibold transition-colors"
                     >
-                      Sin feedback
+                      Registrar feedback
                     </button>
                   )}
                 </div>
 
                 {/* Expanded WOD detail */}
-                {showWodDetail === saved.id && expandedId === saved.id && (
+                {expandedId === saved.id && (
                   <div className="animate-fade-in-up border-t border-neutral-200 dark:border-neutral-700 pt-4">
                     <WodDisplay wod={saved.wod} />
                     <div className="flex flex-wrap justify-center items-center gap-3 mt-6">

@@ -38,14 +38,14 @@ export function groupWodsByDate(wods: SavedWod[]): Map<string, SavedWod[]> {
 
 /**
  * Returns all calendar days for a given month, including padding from
- * previous/next months to fill complete weeks (Monday-start).
+ * previous/next months to fill complete weeks (Sunday-start).
  */
 export function getCalendarDays(year: number, month: number): Array<{ date: Date; isCurrentMonth: boolean }> {
   const firstOfMonth = new Date(year, month, 1);
   const lastOfMonth = new Date(year, month + 1, 0);
 
-  // Monday-based day index: Mon=0 ... Sun=6
-  const startDow = (firstOfMonth.getDay() + 6) % 7;
+  // Sunday-based day index: Sun=0 ... Sat=6
+  const startDow = firstOfMonth.getDay();
 
   const days: Array<{ date: Date; isCurrentMonth: boolean }> = [];
 
@@ -94,6 +94,6 @@ export function formatFullDate(dateKey: string): string {
 }
 
 /**
- * Spanish short day names for calendar header (Monday-start).
+ * Spanish short day names for calendar header (Sunday-start).
  */
-export const DAY_NAMES_SHORT = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+export const DAY_NAMES_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];

@@ -18,7 +18,7 @@ const WodDisplay: React.FC<WodDisplayProps> = ({ wod }) => {
     <div className="space-y-6">
       {/* Title + Date */}
       <div className="animate-fade-in-up">
-        <h2 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
+        <h2 className="text-2xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight">
           {wod.title}
         </h2>
         <div className="flex items-center gap-2 mt-2 text-sm text-neutral-500 dark:text-neutral-400">
