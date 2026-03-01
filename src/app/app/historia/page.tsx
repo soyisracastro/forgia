@@ -21,7 +21,7 @@ export default function HistoriaPage() {
   const [feedbackMap, setFeedbackMap] = useState<Record<string, WorkoutFeedback | null>>({});
   const [loadingFeedback, setLoadingFeedback] = useState<Record<string, boolean>>({});
   const [wodsWithFeedback, setWodsWithFeedback] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<ViewMode>('Lista');
+  const [viewMode, setViewMode] = useState<ViewMode>('Calendario');
   const [feedbackTarget, setFeedbackTarget] = useState<SavedWod | null>(null);
 
   useEffect(() => {
@@ -106,23 +106,13 @@ export default function HistoriaPage() {
         <>
           <div data-print-hide className="mb-6">
             <SegmentedButton
-              options={['Lista', 'Calendario']}
+              options={['Calendario', 'Lista']}
               selected={viewMode}
               onSelect={(v) => setViewMode(v as ViewMode)}
             />
           </div>
 
-          {viewMode === 'Lista' ? (
-            <WodListView
-              savedWods={savedWods}
-              feedbackMap={feedbackMap}
-              loadingFeedback={loadingFeedback}
-              expandedId={expandedId}
-              onExpand={handleExpand}
-              onDelete={handleDelete}
-              wodsWithFeedback={wodsWithFeedback}
-            />
-          ) : (
+          {viewMode === 'Calendario' ? (
             <CalendarView
               savedWods={savedWods}
               feedbackMap={feedbackMap}
@@ -131,6 +121,16 @@ export default function HistoriaPage() {
               onExpand={handleExpand}
               onDelete={handleDelete}
               onRegisterFeedback={setFeedbackTarget}
+              wodsWithFeedback={wodsWithFeedback}
+            />
+          ) : (
+            <WodListView
+              savedWods={savedWods}
+              feedbackMap={feedbackMap}
+              loadingFeedback={loadingFeedback}
+              expandedId={expandedId}
+              onExpand={handleExpand}
+              onDelete={handleDelete}
               wodsWithFeedback={wodsWithFeedback}
             />
           )}
