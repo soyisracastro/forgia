@@ -6,6 +6,7 @@ import { getLatestAssessment, shouldSuggestAssessment } from '@/lib/assessments'
 import { getBenchmarkForLevel } from '@/lib/assessment-benchmarks';
 import { startAssessment } from '@/lib/gemini';
 import type { LevelAssessment, BenchmarkWod } from '@/types/assessment';
+import { toast } from 'sonner';
 import WodDisplay from '@/components/WodDisplay';
 import AssessmentReportModal from '@/components/AssessmentReportModal';
 import LevelUpCelebration from '@/components/LevelUpCelebration';
@@ -35,7 +36,7 @@ export default function LevelAssessmentCard() {
   const [showWod, setShowWod] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [celebration, setCelebration] = useState<ExperienceLevel | null>(null);
-  const [error, setError] = useState<string | null>(null);
+
 
   const benchmark: BenchmarkWod | null = profile?.experience_level
     ? getBenchmarkForLevel(profile.experience_level)
@@ -62,12 +63,11 @@ export default function LevelAssessmentCard() {
   const handleStart = useCallback(async () => {
     if (!benchmark) return;
     setStarting(true);
-    setError(null);
     try {
       const assessment = await startAssessment(benchmark.id);
       setLatestAssessment(assessment);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar evaluación.');
+      toast.error(err instanceof Error ? err.message : 'Error al iniciar evaluación.');
     } finally {
       setStarting(false);
     }
@@ -167,11 +167,6 @@ export default function LevelAssessmentCard() {
         {/* No pending assessment: CTA to start */}
         {!hasPendingAssessment && (
           <div className="px-4 pb-4">
-            {error && (
-              <div className="mb-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3">
-                <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
-              </div>
-            )}
             <button
               onClick={handleStart}
               disabled={starting}

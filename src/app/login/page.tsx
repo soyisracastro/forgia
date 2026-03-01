@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
@@ -29,7 +30,7 @@ export default function LoginPage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -37,7 +38,6 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setMessage('');
 
     if (isSignUp && password !== confirmPassword) {
       setError('Las contraseñas no coinciden.');
@@ -64,7 +64,7 @@ export default function LoginPage() {
             .update({ terms_accepted_at: new Date().toISOString() })
             .eq('id', data.user.id);
         }
-        setMessage('Revisa tu correo para confirmar tu cuenta.');
+        toast.success('Revisa tu correo para confirmar tu cuenta.');
       }
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -83,7 +83,6 @@ export default function LoginPage() {
     setIsForgotPassword(false);
     setTermsAccepted(false);
     setError('');
-    setMessage('');
     setConfirmPassword('');
   };
 
@@ -91,7 +90,6 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setMessage('');
 
     const supabase = createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -101,7 +99,7 @@ export default function LoginPage() {
     if (error) {
       setError(translateError(error.message));
     } else {
-      setMessage('Te hemos enviado un correo con instrucciones para restablecer tu contraseña.');
+      toast.success('Te hemos enviado un correo con instrucciones para restablecer tu contraseña.');
     }
 
     setLoading(false);
@@ -110,7 +108,6 @@ export default function LoginPage() {
   const handleBackToLogin = () => {
     setIsForgotPassword(false);
     setError('');
-    setMessage('');
   };
 
   return (
@@ -173,12 +170,6 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                {/* Success Message */}
-                {message && (
-                  <div className="bg-green-100 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30 text-green-700 dark:text-green-200 px-4 py-3 rounded-xl text-sm">
-                    {message}
-                  </div>
-                )}
 
                 {/* Spacer */}
                 <div className="pt-2" />
@@ -378,12 +369,6 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                {/* Success Message */}
-                {message && (
-                  <div className="bg-green-100 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30 text-green-700 dark:text-green-200 px-4 py-3 rounded-xl text-sm">
-                    {message}
-                  </div>
-                )}
 
                 {/* Spacer */}
                 <div className="pt-2" />

@@ -153,8 +153,9 @@ export async function POST() {
       .single();
 
     if (saveError) {
+      console.error('Error al guardar programa:', saveError.message);
       return NextResponse.json(
-        { error: `Error al guardar programa: ${saveError.message}` },
+        { error: 'Error al guardar programa. Intenta de nuevo.' },
         { status: 500 }
       );
     }

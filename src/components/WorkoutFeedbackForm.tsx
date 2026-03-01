@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import type { Wod, WorkoutFeedback, WorkoutFeedbackInput, RxOrScaled } from '@/types/wod';
 import { saveFeedback } from '@/lib/wods';
 import SegmentedButton from '@/components/ui/SegmentedButton';
@@ -67,9 +68,11 @@ export default function WorkoutFeedbackForm({ wod, wodId, userId, onSaved, onClo
 
       const saved = await saveFeedback(userId, input);
       trackFeedbackSubmitted(difficulty, rxOrScaled);
+      toast.success('Resultado registrado correctamente.');
       onSaved(saved);
     } catch (err) {
       console.error('Error saving feedback:', err);
+      toast.error('No se pudo guardar el resultado.');
     } finally {
       setIsSaving(false);
     }
