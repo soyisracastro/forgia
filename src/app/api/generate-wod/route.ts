@@ -110,7 +110,7 @@ function buildSystemInstruction(profile: Profile, feedbackContext?: string, peri
 
 REGLAS ESTRICTAS:
 - Todo el contenido DEBE estar en español.
-- Los pesos se expresan en ${profile.weight_unit === 'kg' ? 'kilogramos (kg)' : 'libras (lbs)'}. Usa notación CrossFit estándar: ${profile.weight_unit === 'kg' ? "'61/43 kg' (hombres/mujeres)" : "'135/95 lbs' (hombres/mujeres)"}. Las distancias en metros (m).
+- Los pesos se expresan en ${profile.weight_unit === 'kg' ? 'kilogramos (kg)' : 'libras (lbs)'}. ${buildWeightNotation(profile)}. Las distancias en metros (m).
 - Cada WOD debe ser único, variado, y no repetir patrones obvios.
 - El WOD debe ser realista y ejecutable en una sesión de 45-60 minutos.
 - Siempre incluir opciones de escalado en las notas cuando sea apropiado.
@@ -122,6 +122,9 @@ PERFIL DEL ATLETA:
 - Nivel de experiencia: ${profile.experience_level || 'Intermedio'}
 - Equipamiento disponible: ${profile.equipment_level || 'No especificado'}
 - Objetivos: ${profile.objectives?.length ? profile.objectives.join(', ') : 'General fitness'}
+- Sexo: ${profile.gender === 'hombre' ? 'Hombre' : profile.gender === 'mujer' ? 'Mujer' : 'No especificado'}
+- Peso corporal: ${profile.weight ? `${profile.weight} kg` : 'No especificado'}
+- Altura: ${profile.height ? `${profile.height} cm` : 'No especificada'}
 - Frecuencia de entrenamiento: ${profile.training_frequency ? `${profile.training_frequency} días/semana` : 'No especificada'}
 - Historial de lesiones o limitaciones: ${profile.injury_history?.trim() || 'Ninguno reportado'}`,
 
@@ -130,6 +133,7 @@ PERFIL DEL ATLETA:
     buildObjectiveDirectives(profile),
     buildInjuryDirectives(profile),
     buildAgeDirectives(profile),
+    buildBiometricDirectives(profile),
     feedbackContext || '',
     periodizationContext || '',
     programContext || '',
@@ -137,6 +141,42 @@ PERFIL DEL ATLETA:
   ];
 
   return sections.filter(Boolean).join('\n\n');
+}
+
+function buildWeightNotation(profile: Profile): string {
+  const gender = profile.gender;
+  if (gender === 'hombre') {
+    return `Usa notación CrossFit estándar con el peso correspondiente a hombres: ${profile.weight_unit === 'kg' ? "'61 kg'" : "'135 lbs'"}. NO uses formato dual hombres/mujeres`;
+  }
+  if (gender === 'mujer') {
+    return `Usa notación CrossFit estándar con el peso correspondiente a mujeres: ${profile.weight_unit === 'kg' ? "'43 kg'" : "'95 lbs'"}. NO uses formato dual hombres/mujeres`;
+  }
+  return `Usa notación CrossFit estándar: ${profile.weight_unit === 'kg' ? "'61/43 kg' (hombres/mujeres)" : "'135/95 lbs' (hombres/mujeres)"}`;
+}
+
+function buildBiometricDirectives(profile: Profile): string {
+  const lines: string[] = [];
+
+  if (profile.weight) {
+    lines.push(
+      'PERSONALIZACIÓN DE CARGAS:',
+      `- El atleta pesa ${profile.weight} kg. Usa esta referencia para prescribir cargas proporcionales.`,
+      '- Para movimientos con barra (Back Squat, Deadlift, Clean, Snatch): sugiere porcentajes del peso corporal como punto de partida si no hay PRs registrados.',
+      '- Para movimientos con carga externa (KB Swings, DB): ajusta el peso sugerido proporcionalmente.',
+    );
+  }
+
+  if (profile.gender === 'hombre' || profile.gender === 'mujer') {
+    const genderLabel = profile.gender === 'hombre' ? 'hombres' : 'mujeres';
+    lines.push(
+      '',
+      'ESTÁNDARES DE REFERENCIA:',
+      `- Usa los pesos estándar de ${genderLabel} en CrossFit como referencia para las prescripciones.`,
+      `- Notación: muestra solo el peso correspondiente al sexo del atleta (no usar formato "hombres/mujeres").`,
+    );
+  }
+
+  return lines.length ? lines.join('\n') : '';
 }
 
 function buildLevelDirectives(profile: Profile): string {
@@ -461,7 +501,7 @@ export async function POST(request: NextRequest) {
           title: { type: Type.STRING, description: "Debe ser 'Metcon'" },
           type: { type: Type.STRING, description: "Tipo de entrenamiento: 'AMRAP', 'For Time', 'EMOM', 'Tabata', etc." },
           description: { type: Type.STRING, description: "Una descripción concisa de la estructura del metcon, ej. '21-15-9 reps de:' o 'AMRAP en 20 minutos:'." },
-          movements: { type: Type.ARRAY, items: { type: Type.STRING }, description: `Lista de movimientos con repeticiones/pesos, ej. ${typedProfile.weight_unit === 'kg' ? "'Peso Muerto (102/70 kg)'" : "'Peso Muerto (225/155 lbs)'"}, 'Burpee Box Jump Overs (60/50 cm)'.` },
+          movements: { type: Type.ARRAY, items: { type: Type.STRING }, description: `Lista de movimientos con repeticiones/pesos, ej. ${typedProfile.gender === 'hombre' ? (typedProfile.weight_unit === 'kg' ? "'Peso Muerto (102 kg)'" : "'Peso Muerto (225 lbs)'") : typedProfile.gender === 'mujer' ? (typedProfile.weight_unit === 'kg' ? "'Peso Muerto (70 kg)'" : "'Peso Muerto (155 lbs)'") : (typedProfile.weight_unit === 'kg' ? "'Peso Muerto (102/70 kg)'" : "'Peso Muerto (225/155 lbs)'")}, 'Burpee Box Jump Overs (60/50 cm)'.` },
           notes: { type: Type.STRING, description: 'Notas opcionales, opciones de escalado o límites de tiempo.' },
         },
         required: ['title', 'type', 'description', 'movements'],

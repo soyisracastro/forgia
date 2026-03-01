@@ -12,6 +12,8 @@ export interface ProfileUpdateInput {
   weight_unit?: WeightUnit;
   training_frequency?: number | null;
   gender?: Gender | null;
+  weight?: number | null;
+  height?: number | null;
 }
 
 export async function updateProfile(userId: string, input: ProfileUpdateInput): Promise<void> {
@@ -29,6 +31,8 @@ export async function updateProfile(userId: string, input: ProfileUpdateInput): 
       ...(input.weight_unit !== undefined && { weight_unit: input.weight_unit }),
       ...(input.training_frequency !== undefined && { training_frequency: input.training_frequency }),
       ...(input.gender !== undefined && { gender: input.gender }),
+      ...(input.weight !== undefined && { weight: input.weight }),
+      ...(input.height !== undefined && { height: input.height }),
       updated_at: new Date().toISOString(),
     })
     .eq('id', userId);

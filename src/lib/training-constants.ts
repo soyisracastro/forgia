@@ -90,9 +90,9 @@ export const CROSSFIT_EQUIPMENT_OPTIONS: EquipmentOption[] = [
 // --- Training Frequency ---
 
 export const TRAINING_FREQUENCY_OPTIONS: { value: number; label: string; description: string }[] = [
-  { value: 2, label: '2 días/semana', description: 'Ideal para empezar o si tienes poco tiempo' },
-  { value: 3, label: '3 días/semana', description: 'Balance perfecto para principiantes' },
-  { value: 4, label: '4 días/semana', description: 'Progresión sólida con descanso adecuado' },
-  { value: 5, label: '5 días/semana', description: 'Alto compromiso, ideal para intermedios y avanzados' },
-  { value: 6, label: '6 días/semana', description: 'Máximo volumen, un día de descanso obligatorio' },
+  { value: 2, label: 'días/semana', description: 'Ideal para empezar o si tienes poco tiempo' },
+  { value: 3, label: 'días/semana', description: 'Balance perfecto para principiantes' },
+  { value: 4, label: 'días/semana', description: 'Progresión sólida con descanso adecuado' },
+  { value: 5, label: 'días/semana', description: 'Alto compromiso, ideal para intermedios y avanzados' },
+  { value: 6, label: 'días/semana', description: 'Máximo volumen, un día de descanso obligatorio' },
 ];
