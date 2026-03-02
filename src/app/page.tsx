@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { CalendarRange, Trophy, Flame, Dumbbell } from 'lucide-react';
+import { CalendarRange, Trophy, Flame, Dumbbell, ArrowRight } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import TestimonialCarousel from '@/components/TestimonialCarousel';
 
@@ -93,7 +93,7 @@ export default function LandingPage() {
                 className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-linear-to-r from-red-500 to-red-600 rounded-full hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900"
               >
                 Comenzar Gratis
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                <ArrowRight className="ml-2 w-5 h-5" />
               </Link>
               <Link
                 href="#features"
@@ -184,7 +184,7 @@ export default function LandingPage() {
             className="inline-flex items-center justify-center px-10 py-4 text-lg font-semibold text-red-600 bg-white rounded-full hover:bg-neutral-100 transition-all duration-300 shadow-xl hover:scale-105"
           >
             Comenzar Gratis
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            <ArrowRight className="ml-2 w-5 h-5" />
           </Link>
           <p className="mt-4 text-sm text-white/70">
             No se requiere tarjeta de crédito para empezar.

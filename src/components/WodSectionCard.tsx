@@ -1,4 +1,5 @@
 import type { WodSection } from '@/types/wod';
+import { Clock, AlertTriangle } from 'lucide-react';
 
 type SectionType = 'warmUp' | 'strengthSkill' | 'metcon' | 'coolDown';
 
@@ -75,17 +76,6 @@ const SectionIcon: React.FC<{ sectionType: SectionType }> = ({ sectionType }) =>
   }
 };
 
-const ClockIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-  </svg>
-);
-
-const WarningIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><path d="M12 9v4" /><path d="M12 17h.01" />
-  </svg>
-);
 
 // --- Helper Render Functions ---
 
@@ -131,7 +121,7 @@ function renderBulletItems(items: string[], sectionType: SectionType) {
 function renderStrategyTip(notes: string, label?: string) {
   return (
     <div className="mt-4 flex items-start gap-2.5 p-3 bg-amber-500/5 dark:bg-amber-500/10 rounded-lg border border-amber-500/20">
-      <WarningIcon className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+      <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
       <div>
         <p className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-0.5">
           {label || 'Estrategia'}
@@ -179,7 +169,7 @@ const WodSectionCard: React.FC<WodSectionCardProps> = ({ section, sectionType, a
             <div className="flex items-center gap-2 mt-1.5">
               {section.duration && (
                 <span className="inline-flex items-center gap-1 text-xs font-medium text-neutral-500 dark:text-neutral-400">
-                  <ClockIcon className="h-3.5 w-3.5" />
+                  <Clock className="h-3.5 w-3.5" />
                   {section.duration}
                 </span>
               )}

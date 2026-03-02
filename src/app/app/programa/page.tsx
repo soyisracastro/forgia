@@ -208,9 +208,9 @@ export default function ProgramaPage() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-semibold text-neutral-900 dark:text-neutral-100">
             Programa Mensual

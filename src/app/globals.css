@@ -10,6 +10,7 @@
   --animate-fade-in-up: fade-in-up 0.4s ease-out both;
   --animate-timer-pulse: timer-pulse 1s ease-in-out infinite;
   --animate-forge: forge 1.2s ease-in-out infinite;
+  --animate-confetti: confetti-fall 3s linear forwards;
 }
 
 html {
@@ -84,9 +85,6 @@ html {
   }
 }
 
-.animate-confetti {
-  animation: confetti-fall linear forwards;
-}
 
 /* Prevent iOS Safari auto-zoom on input focus (triggers when font-size < 16px) */
 @supports (-webkit-touch-callout: none) {

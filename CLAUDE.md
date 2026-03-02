@@ -94,3 +94,27 @@ Components in `src/components/live/` provide a full-screen timer overlay with au
 - **Icons**: Lucide React exclusively
 - Client components use `'use client'` directive
 - Brand guidelines are in `docs/BRAND_GUIDELINES.md`
+
+## Code Quality Conventions
+
+### Security
+- All AI-calling API routes (`/api/generate-*`, `/api/weekly-analysis`, `/api/assessments/*`) must import and call `checkRateLimit` from `@/lib/rate-limit`
+- User-supplied text (sessionNotes, form inputs) must be sanitized before embedding in AI prompts: `.slice(0, 500).replace(/[<>{}]/g, '')` + delimiter wrapping
+- API route error responses must NEVER include `error.message` — log internally, return a generic Spanish message to the client
+- Auth callback (`/auth/callback`) must validate redirect paths and OTP types against allowlists
+- `next.config.ts` must include security headers: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+
+### Performance
+- Landing page (`src/app/page.tsx`) must remain a Server Component — no `'use client'`
+- Heavy overlays/modals must use `dynamic()` from `next/dynamic` with `{ ssr: false }`
+- All `<Image fill>` must include a `sizes` prop; blog images use `sizes="(max-width: 768px) 100vw, 768px"`
+- Prefer Lucide React imports over inline SVG definitions — zero tolerance for `const FooIcon = (props) => <svg ...>`
+
+### Tailwind CSS 4
+- Custom animations must be registered as `--animate-*` tokens in `@theme inline` block in `globals.css` — never use manual `.animate-*` classes
+- Use `@custom-variant` for dark mode, not `darkMode` config
+
+### Next.js App Router
+- `src/app/app/loading.tsx` and `src/app/app/error.tsx` must exist (cascade to all sub-routes)
+- `src/app/app/layout.tsx` must export `metadata` with `title.template` for proper tab titles
+- Protected routes use `src/proxy.ts` (not middleware.ts) — Next.js 16 convention

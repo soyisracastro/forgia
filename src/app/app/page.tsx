@@ -14,35 +14,10 @@ import PrintWodButton from '@/components/PrintWodButton';
 import TrainingIntelligenceCard from '@/components/TrainingIntelligenceCard';
 import ProgramBanner from '@/components/ProgramBanner';
 import { trackWodGenerated, trackWodSaved, trackWorkoutStarted } from '@/lib/analytics';
+import { Zap, Dices, ClipboardCheck, Play, Bookmark, BookmarkCheck } from 'lucide-react';
 
 const LiveWorkoutOverlay = dynamic(() => import('@/components/live/LiveWorkoutOverlay'), { ssr: false });
 const WorkoutFeedbackForm = dynamic(() => import('@/components/WorkoutFeedbackForm'), { ssr: false });
-
-// --- SVG Icons ---
-
-const BoltIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M13 3v7h6l-8 11v-7H5l8-11z"/></svg>
-);
-
-const DiceIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M8 8h.01"/><path d="M16 8h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/><path d="M12 12h.01"/></svg>
-);
-
-const ClipboardCheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
-);
-
-const PlayIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="6 3 20 12 6 21 6 3"/></svg>
-);
-
-const BookmarkIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>
-);
-
-const BookmarkCheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/><path d="m9 10 2 2 4-4"/></svg>
-);
 
 const LOADING_PHRASES = [
   'Personalizando tu infierno diario...',
@@ -211,7 +186,7 @@ export default function AppPage() {
     }
     return (
       <div className="text-center py-16">
-        <DiceIcon className="h-12 w-12 mx-auto text-neutral-300 dark:text-neutral-600 mb-4" />
+        <Dices className="h-12 w-12 mx-auto text-neutral-300 dark:text-neutral-600 mb-4" />
         <h3 className="text-lg font-medium text-neutral-500 dark:text-neutral-400 mb-2">No hay WOD todavía</h3>
         <p className="text-sm text-neutral-400 dark:text-neutral-500">Haz clic en &ldquo;Generar WOD&rdquo; para crear tu entrenamiento del día.</p>
       </div>
@@ -252,7 +227,7 @@ export default function AppPage() {
         disabled={isLoading}
         className="w-full flex items-center justify-center gap-2 h-14 mb-8 text-base font-bold uppercase tracking-wider text-white bg-red-500 rounded-xl hover:bg-red-600 shadow-lg shadow-red-500/25 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-400 dark:focus:ring-offset-neutral-900"
       >
-        <BoltIcon className="h-5 w-5" />
+        <Zap className="h-5 w-5" />
         {wod ? 'Generar Nuevo' : 'Generar WOD'}
       </button>
 
@@ -279,7 +254,7 @@ export default function AppPage() {
                   className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:text-red-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-50"
                   aria-label={justSaved ? 'Guardado' : savedWodId ? 'Guardado' : 'Guardar WOD'}
                 >
-                  {savedWodId ? <BookmarkCheckIcon className="h-4 w-4" /> : <BookmarkIcon className="h-4 w-4" />}
+                  {savedWodId ? <BookmarkCheck className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
                 </button>
               </div>
               {/* Right: main actions */}
@@ -289,7 +264,7 @@ export default function AppPage() {
                     onClick={() => setShowFeedback((prev) => !prev)}
                     className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-semibold rounded-lg border-2 border-red-500 text-red-500 hover:bg-red-500/10 transition-colors"
                   >
-                    <ClipboardCheckIcon className="h-4 w-4" />
+                    <ClipboardCheck className="h-4 w-4" />
                     <span className="hidden sm:inline">Registrar</span>
                   </button>
                 )}
@@ -297,7 +272,7 @@ export default function AppPage() {
                   onClick={() => { trackWorkoutStarted(); setShowLiveMode(true); }}
                   className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 shadow-lg shadow-red-500/25 transition-colors"
                 >
-                  <PlayIcon className="h-4 w-4" />
+                  <Play className="h-4 w-4" />
                   <span className="hidden sm:inline">Iniciar Entrenamiento</span>
                 </button>
               </div>

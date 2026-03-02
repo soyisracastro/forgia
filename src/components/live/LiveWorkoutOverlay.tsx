@@ -9,6 +9,7 @@ import LiveTimerDisplay from './LiveTimerDisplay';
 import LiveSectionView from './LiveSectionView';
 import LiveWorkoutSummary from './LiveWorkoutSummary';
 import { trackWorkoutCompleted } from '@/lib/analytics';
+import { X, Pause, Play, SkipForward, Flag, Volume2, VolumeX } from 'lucide-react';
 
 type SectionKey = 'warmUp' | 'strengthSkill' | 'metcon' | 'coolDown';
 type WorkoutPhase = 'countdown' | SectionKey | 'summary';
@@ -101,35 +102,6 @@ function getTotalDurationSeconds(config: TimerConfig): number | null {
   }
 }
 
-// --- Icons ---
-
-const XIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-);
-
-const PauseIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>
-);
-
-const PlayIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="6 3 20 12 6 21 6 3"/></svg>
-);
-
-const SkipIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/></svg>
-);
-
-const FlagIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg>
-);
-
-const VolumeIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
-);
-
-const VolumeOffIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/></svg>
-);
 
 // --- Component ---
 
@@ -380,7 +352,7 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
             onClick={handleClose}
             className="size-10 rounded-full bg-white/5 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white transition-colors"
           >
-            <XIcon />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -418,7 +390,7 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
           className="size-10 rounded-full bg-white/5 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white transition-colors"
           aria-label="Cerrar"
         >
-          <XIcon />
+          <X className="w-5 h-5" />
         </button>
 
         {/* Phase pills */}
@@ -445,7 +417,7 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
           className="size-10 rounded-full bg-white/5 backdrop-blur-sm flex items-center justify-center text-white/70 hover:text-white transition-colors"
           aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
         >
-          {isMuted ? <VolumeOffIcon /> : <VolumeIcon />}
+          {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
         </button>
       </header>
 
@@ -492,7 +464,7 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
             className="group flex flex-col items-center gap-1 active:scale-95 transition-transform"
           >
             <div className="size-14 rounded-full bg-neutral-800 border border-white/10 flex items-center justify-center text-white hover:bg-neutral-700 transition-colors">
-              <SkipIcon />
+              <SkipForward className="w-7 h-7" />
             </div>
             <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider group-hover:text-white/60">Sig.</span>
           </button>
@@ -503,7 +475,7 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
             className="group flex flex-col items-center gap-1 active:scale-95 transition-transform"
           >
             <div className="size-20 rounded-full bg-neutral-800 border-2 border-white/10 flex items-center justify-center text-white shadow-lg hover:bg-neutral-700 hover:border-white/20 transition-all">
-              {timer.isRunning ? <PauseIcon /> : <PlayIcon />}
+              {timer.isRunning ? <Pause className="w-10 h-10" /> : <Play className="w-10 h-10" />}
             </div>
             <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider group-hover:text-white/60">
               {timer.isRunning ? 'Pausa' : 'Play'}
@@ -516,7 +488,7 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
             className="group flex flex-col items-center gap-1 active:scale-95 transition-transform"
           >
             <div className="size-14 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white hover:border-transparent transition-all shadow-[0_0_15px_rgba(239,67,67,0.15)]">
-              <FlagIcon />
+              <Flag className="w-6 h-6" />
             </div>
             <span className="text-[10px] font-medium text-red-500/60 uppercase tracking-wider group-hover:text-red-500">Fin</span>
           </button>

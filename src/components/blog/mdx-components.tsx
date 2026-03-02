@@ -89,6 +89,7 @@ export const mdxComponents: Record<string, React.ComponentType<any>> = {
       alt={props.alt ?? ''}
       width={800}
       height={450}
+      sizes="(max-width: 768px) 100vw, 768px"
       className="rounded-xl my-6 w-full h-auto"
     />
   ),

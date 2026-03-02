@@ -32,12 +32,17 @@ export default function RecordsPage() {
 
   // Form state
   const [showForm, setShowForm] = useState(false);
-  const [formMovement, setFormMovement] = useState('');
-  const [customMovement, setCustomMovement] = useState('');
-  const [formRecordType, setFormRecordType] = useState<RecordType>('1RM');
-  const [formValue, setFormValue] = useState('');
-  const [formDate, setFormDate] = useState(new Date().toISOString().split('T')[0]);
-  const [formNotes, setFormNotes] = useState('');
+  const initialFormState = {
+    movement: '',
+    customMovement: '',
+    recordType: '1RM' as RecordType,
+    value: '',
+    date: new Date().toISOString().split('T')[0],
+    notes: '',
+  };
+  const [form, setForm] = useState(initialFormState);
+  const updateForm = <K extends keyof typeof initialFormState>(field: K, value: typeof initialFormState[K]) =>
+    setForm(prev => ({ ...prev, [field]: value }));
   const [isSaving, setIsSaving] = useState(false);
 
   const loadRecords = useCallback(async () => {
@@ -87,18 +92,18 @@ export default function RecordsPage() {
   const handleSave = async () => {
     if (!user || isSaving) return;
 
-    const movementName = formMovement === '__custom__' ? customMovement.trim() : formMovement;
-    if (!movementName || !formValue) return;
+    const movementName = form.movement === '__custom__' ? form.customMovement.trim() : form.movement;
+    if (!movementName || !form.value) return;
 
     setIsSaving(true);
     try {
       const input: PersonalRecordInput = {
         movement_name: movementName,
-        record_type: formRecordType,
-        value: parseFloat(formValue),
-        unit: getUnitForRecordType(formRecordType),
-        date_achieved: formDate,
-        notes: formNotes.trim() || null,
+        record_type: form.recordType,
+        value: parseFloat(form.value),
+        unit: getUnitForRecordType(form.recordType),
+        date_achieved: form.date,
+        notes: form.notes.trim() || null,
       };
 
       await savePersonalRecord(user.id, input);
@@ -106,10 +111,7 @@ export default function RecordsPage() {
       toast.success('PR guardado correctamente.');
 
       // Reset form
-      setFormMovement('');
-      setCustomMovement('');
-      setFormValue('');
-      setFormNotes('');
+      setForm(initialFormState);
       setShowForm(false);
     } catch (err) {
       console.error('Error saving record:', err);
@@ -131,9 +133,12 @@ export default function RecordsPage() {
   };
 
   const handleSaveFromCalculator = (estimated1RM: number) => {
-    setFormRecordType('1RM');
-    setFormValue(String(estimated1RM));
-    setFormDate(new Date().toISOString().split('T')[0]);
+    setForm(prev => ({
+      ...prev,
+      recordType: '1RM',
+      value: String(estimated1RM),
+      date: new Date().toISOString().split('T')[0],
+    }));
     setShowForm(true);
     // Scroll to form
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -183,8 +188,8 @@ export default function RecordsPage() {
               Movimiento
             </label>
             <select
-              value={formMovement}
-              onChange={(e) => setFormMovement(e.target.value)}
+              value={form.movement}
+              onChange={(e) => updateForm('movement', e.target.value)}
               className="w-full px-3 py-2.5 text-sm rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="">Seleccionar movimiento...</option>
@@ -197,11 +202,11 @@ export default function RecordsPage() {
               ))}
               <option value="__custom__">Otro (personalizado)</option>
             </select>
-            {formMovement === '__custom__' && (
+            {form.movement === '__custom__' && (
               <input
                 type="text"
-                value={customMovement}
-                onChange={(e) => setCustomMovement(e.target.value)}
+                value={form.customMovement}
+                onChange={(e) => updateForm('customMovement', e.target.value)}
                 placeholder="Nombre del movimiento"
                 className="mt-2 w-full px-3 py-2.5 text-sm rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
@@ -215,8 +220,8 @@ export default function RecordsPage() {
             </label>
             <SegmentedButton
               options={['1RM', '3RM', '5RM']}
-              selected={formRecordType}
-              onSelect={(v) => setFormRecordType(v as RecordType)}
+              selected={form.recordType}
+              onSelect={(v) => updateForm('recordType', v as RecordType)}
             />
           </div>
 
@@ -224,15 +229,15 @@ export default function RecordsPage() {
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                {formRecordType === 'max_reps' ? 'Repeticiones' : formRecordType === 'time' ? 'Segundos' : `Peso (${weightUnit})`}
+                {form.recordType === 'max_reps' ? 'Repeticiones' : form.recordType === 'time' ? 'Segundos' : `Peso (${weightUnit})`}
               </label>
               <input
                 type="number"
                 min={0}
                 step="any"
-                value={formValue}
-                onChange={(e) => setFormValue(e.target.value)}
-                placeholder={formRecordType === 'max_reps' ? '20' : formRecordType === 'time' ? '180' : '225'}
+                value={form.value}
+                onChange={(e) => updateForm('value', e.target.value)}
+                placeholder={form.recordType === 'max_reps' ? '20' : form.recordType === 'time' ? '180' : '225'}
                 className="w-full px-3 py-2.5 text-sm rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
@@ -242,8 +247,8 @@ export default function RecordsPage() {
               </label>
               <input
                 type="date"
-                value={formDate}
-                onChange={(e) => setFormDate(e.target.value)}
+                value={form.date}
+                onChange={(e) => updateForm('date', e.target.value)}
                 className="w-full px-3 py-2.5 text-sm rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
@@ -256,8 +261,8 @@ export default function RecordsPage() {
             </label>
             <input
               type="text"
-              value={formNotes}
-              onChange={(e) => setFormNotes(e.target.value)}
+              value={form.notes}
+              onChange={(e) => updateForm('notes', e.target.value)}
               placeholder="Ej: Sentí que podía subir más"
               className="w-full px-3 py-2.5 text-sm rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-red-500"
             />
@@ -275,7 +280,7 @@ export default function RecordsPage() {
             <button
               type="button"
               onClick={handleSave}
-              disabled={isSaving || !(formMovement === '__custom__' ? customMovement.trim() : formMovement) || !formValue}
+              disabled={isSaving || !(form.movement === '__custom__' ? form.customMovement.trim() : form.movement) || !form.value}
               className="px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? 'Guardando...' : 'Guardar PR'}
