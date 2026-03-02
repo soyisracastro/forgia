@@ -39,7 +39,7 @@ NEXT_PUBLIC_GA_ID=...             # Optional, GA4
 
 ### Routing & Auth
 
-- `/app/*` routes are **protected** via `src/middleware.ts` (redirects to `/login` if unauthenticated)
+- `/app/*` routes are **protected** via `src/proxy.ts` (redirects to `/login` if unauthenticated)
 - `/login` redirects to `/app` if already authenticated
 - OAuth callback at `/auth/callback`
 - `AuthContext` provides client-side user/profile state
@@ -50,7 +50,7 @@ NEXT_PUBLIC_GA_ID=...             # Optional, GA4
 - **Client components** call `src/lib/gemini.ts` helper functions (thin fetch wrappers)
 - These hit **API routes** at `src/app/api/*` which use the Supabase server client and Gemini
 - Gemini API key is never exposed to the client — all AI calls happen server-side
-- Supabase clients: `src/lib/supabase/client.ts` (browser) and `src/lib/supabase/server.ts` (API routes/middleware)
+- Supabase clients: `src/lib/supabase/client.ts` (browser) and `src/lib/supabase/server.ts` (API routes/proxy)
 
 ### Key API Routes
 
