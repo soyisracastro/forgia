@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit, trackUsage } from '@/lib/rate-limit';
 import type { Profile } from '@/types/profile';
 import type { WeeklyAnalysisResponse } from '@/types/weekly-analysis';
 
@@ -103,6 +104,15 @@ export async function GET(): Promise<NextResponse<WeeklyAnalysisResponse>> {
     );
   }
 
+  // Rate limit check
+  const rateLimit = await checkRateLimit(user.id, 'weekly_analysis');
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { feedbackCount: 0, analysis: null, error: 'Límite diario de análisis alcanzado.' } as unknown as WeeklyAnalysisResponse,
+      { status: 429 }
+    );
+  }
+
   const weekStart = getWeekStart();
 
   const [profileResult, feedbackResult] = await Promise.all([
@@ -147,6 +157,7 @@ export async function GET(): Promise<NextResponse<WeeklyAnalysisResponse>> {
 
     const analysis = JSON.parse(jsonString);
 
+    await trackUsage(user.id, 'weekly_analysis');
     return NextResponse.json({
       feedbackCount: feedbackRecords.length,
       analysis,

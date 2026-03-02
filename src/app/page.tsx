@@ -1,10 +1,8 @@
-'use client';
-
-import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { CalendarRange, Trophy, Flame, Dumbbell } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
+import TestimonialCarousel from '@/components/TestimonialCarousel';
 
 const features = [
   {
@@ -51,26 +49,6 @@ const testimonials = [
 ];
 
 export default function LandingPage() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const carouselRef = useRef<HTMLDivElement>(null);
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const scrollLeft = e.currentTarget.scrollLeft;
-    const width = e.currentTarget.offsetWidth;
-    const newIndex = Math.round(scrollLeft / width);
-    if (newIndex !== activeIndex) {
-      setActiveIndex(newIndex);
-    }
-  };
-
-  const scrollToIdx = (idx: number) => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollTo({
-        left: idx * carouselRef.current.offsetWidth,
-        behavior: 'smooth'
-      });
-    }
-  };
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -97,7 +75,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 bg-linear-to-br from-red-50 via-white to-orange-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800 -z-10" />
         <div className="absolute top-20 right-10 w-72 h-72 bg-red-200/30 dark:bg-red-500/10 rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-20 left-10 w-96 h-96 bg-orange-200/20 dark:bg-orange-500/5 rounded-full blur-3xl -z-10" />
-        
+
         <div className="container mx-auto px-4 max-w-5xl py-16 md:py-24">
           <div className="max-w-3xl mx-auto text-center animate-fade-in-up">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight leading-tight">
@@ -134,8 +112,8 @@ export default function LandingPage() {
       <section className="py-8 md:py-12 animate-fade-in-up">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="relative aspect-video md:aspect-21/9 rounded-3xl overflow-hidden shadow-2xl group">
-            <Image 
-              src="/assets/hero-visual.png" 
+            <Image
+              src="/assets/hero-visual.png"
               alt="Entrena donde sea con Forgia"
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -188,60 +166,7 @@ export default function LandingPage() {
       {/* Testimonial Carousel */}
       <section className="py-16 md:py-20 relative">
         <div className="container mx-auto px-4 max-w-3xl">
-          <div className="relative bg-neutral-900 border border-neutral-800 rounded-3xl overflow-hidden shadow-2xl shadow-red-500/5">
-            {/* Decorative elements */}
-            <div className="absolute top-0 left-0 w-32 h-32 bg-red-500/20 rounded-full blur-2xl" />
-            <div className="absolute bottom-0 right-0 w-40 h-40 bg-orange-500/10 rounded-full blur-2xl" />
-            
-            <div 
-              ref={carouselRef}
-              onScroll={handleScroll}
-              className="flex overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar"
-            >
-              {testimonials.map((testimonial, idx) => (
-                <div key={idx} className="min-w-full snap-center p-8 md:p-14 text-center">
-                  <div className="relative z-10">
-                    <div className="flex justify-center gap-1 mb-6">
-                      {[...Array(5)].map((_, i) => (
-                        <svg key={i} xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-red-500">
-                          <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                        </svg>
-                      ))}
-                    </div>
-                    <blockquote className="text-xl md:text-2xl font-medium text-white mb-8 leading-relaxed max-w-2xl mx-auto">
-                      &ldquo;{testimonial.quote}&rdquo;
-                    </blockquote>
-                    <div className="flex items-center justify-center gap-4">
-                      <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-red-500/20">
-                        <Image 
-                          src={testimonial.avatar}
-                          alt={testimonial.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                      <div className="text-left">
-                        <p className="font-semibold text-white">{testimonial.name}</p>
-                        <p className="text-sm text-neutral-400">{testimonial.label}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Navigation Dots */}
-            <div className="flex justify-center gap-2 pb-8 relative z-10">
-              {testimonials.map((_, idx) => (
-                <button 
-                  key={idx}
-                  onClick={() => scrollToIdx(idx)}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === activeIndex ? 'bg-red-500 w-4' : 'bg-neutral-600'}`}
-                  aria-label={`Ir al testimonio ${idx + 1}`}
-                />
-              ))}
-            </div>
-          </div>
+          <TestimonialCarousel testimonials={testimonials} />
         </div>
       </section>
 

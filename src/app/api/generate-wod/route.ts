@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit, trackUsage } from '@/lib/rate-limit';
 import type { Profile } from '@/types/profile';
 import { buildPeriodizationAnalysis, buildPeriodizationContext } from '@/lib/periodization';
 import type { WodRecord, FeedbackRecord as PeriodizationFeedbackRecord } from '@/lib/periodization';
@@ -360,6 +361,15 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Rate limit check
+  const rateLimit = await checkRateLimit(user.id, 'generate_wod');
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Has alcanzado el límite diario de generación de WODs. Intenta de nuevo mañana.', remaining: 0, limit: rateLimit.limit },
+      { status: 429 }
+    );
+  }
+
   // Fetch profile
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -544,6 +554,7 @@ export async function POST(request: NextRequest) {
     }
 
     const wodData = JSON.parse(jsonString);
+    await trackUsage(user.id, 'generate_wod');
     return NextResponse.json(wodData);
   } catch (error) {
     console.error('Error al generar el WOD:', error);

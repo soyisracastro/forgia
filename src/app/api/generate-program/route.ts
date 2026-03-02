@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
 import { createClient } from '@/lib/supabase/server';
+import { checkRateLimit, trackUsage } from '@/lib/rate-limit';
 import type { Profile } from '@/types/profile';
 import type { ProgramWeek } from '@/types/program';
 
@@ -95,6 +96,15 @@ export async function POST() {
     );
   }
 
+  // Rate limit check
+  const rateLimit = await checkRateLimit(user.id, 'generate_program');
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: 'Has alcanzado el límite diario de generación de programas. Intenta de nuevo mañana.', remaining: 0, limit: rateLimit.limit },
+      { status: 429 }
+    );
+  }
+
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
@@ -160,6 +170,7 @@ export async function POST() {
       );
     }
 
+    await trackUsage(user.id, 'generate_program');
     return NextResponse.json({
       id: saved.id,
       user_id: saved.user_id,
