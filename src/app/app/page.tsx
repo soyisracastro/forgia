@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import type { Wod, WorkoutFeedback } from '@/types/wod';
 import { generateWod } from '@/lib/gemini';
@@ -10,11 +11,12 @@ import Spinner from '@/components/Spinner';
 import WodDisplay from '@/components/WodDisplay';
 import CopyWodButton from '@/components/CopyWodButton';
 import PrintWodButton from '@/components/PrintWodButton';
-import WorkoutFeedbackForm from '@/components/WorkoutFeedbackForm';
 import TrainingIntelligenceCard from '@/components/TrainingIntelligenceCard';
 import ProgramBanner from '@/components/ProgramBanner';
-import LiveWorkoutOverlay from '@/components/live/LiveWorkoutOverlay';
 import { trackWodGenerated, trackWodSaved, trackWorkoutStarted } from '@/lib/analytics';
+
+const LiveWorkoutOverlay = dynamic(() => import('@/components/live/LiveWorkoutOverlay'), { ssr: false });
+const WorkoutFeedbackForm = dynamic(() => import('@/components/WorkoutFeedbackForm'), { ssr: false });
 
 // --- SVG Icons ---
 
@@ -139,7 +141,6 @@ export default function AppPage() {
 
   const handleGenerate = useCallback(async () => {
     setIsLoading(true);
-
     setWod(null);
     setJustSaved(false);
     setSavedWodId(null);
@@ -194,7 +195,6 @@ export default function AppPage() {
         </div>
       );
     }
-
     if (isLoadingLatest) {
       return (
         <div className="flex justify-center py-16">

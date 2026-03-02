@@ -12,6 +12,9 @@ export async function generateProgram(): Promise<MonthlyProgram> {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: `Error del servidor (estado ${response.status})` }));
+    if (response.status === 429) {
+      throw new Error(errorData.error || 'Has alcanzado el límite diario. Intenta de nuevo mañana.');
+    }
     throw new Error(errorData.error || `La solicitud falló con el estado ${response.status}`);
   }
 
@@ -27,6 +30,9 @@ export async function generateWod(request?: GenerateWodRequest): Promise<Wod> {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ error: `Error del servidor (estado ${response.status})` }));
+    if (response.status === 429) {
+      throw new Error(errorData.error || 'Has alcanzado el límite diario. Intenta de nuevo mañana.');
+    }
     throw new Error(errorData.error || `La solicitud falló con el estado ${response.status}`);
   }
 
@@ -36,6 +42,9 @@ export async function generateWod(request?: GenerateWodRequest): Promise<Wod> {
 export async function fetchWeeklyAnalysis(): Promise<WeeklyAnalysisResponse> {
   const response = await fetch('/api/weekly-analysis');
   if (!response.ok) {
+    if (response.status === 429) {
+      throw new Error('Has alcanzado el límite diario de análisis. Intenta de nuevo mañana.');
+    }
     throw new Error('Error al cargar el análisis semanal');
   }
   return response.json();
