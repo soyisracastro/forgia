@@ -48,6 +48,16 @@ export function trackWodPrinted(): void {
   trackEvent('wod_printed');
 }
 
+// --- Coach IA events ---
+
+export function trackChatOpened(): void {
+  trackEvent('chat_opened');
+}
+
+export function trackChatMessageSent(): void {
+  trackEvent('chat_message_sent');
+}
+
 // --- Open 2026 events ---
 
 export function trackOpenWorkoutViewed(division: string, gender: string): void {

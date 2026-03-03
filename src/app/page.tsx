@@ -51,63 +51,67 @@ const testimonials = [
 export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="py-6">
-        <div className="container mx-auto px-4 max-w-5xl flex justify-between items-center">
-          <span className="text-xl font-semibold text-red-500">
-            Forgia
-          </span>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/blog"
-              className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
-            >
-              Blog
-            </Link>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="grow flex items-center relative overflow-hidden">
-        {/* Background gradient */}
+      {/* Header + Hero wrapper with shared gradient */}
+      <div className="relative overflow-hidden">
+        {/* Background gradient (covers header + hero) */}
         <div className="absolute inset-0 bg-linear-to-br from-red-50 via-white to-orange-50 dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-800 -z-10" />
         <div className="absolute top-20 right-10 w-72 h-72 bg-red-200/30 dark:bg-red-500/10 rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-20 left-10 w-96 h-96 bg-orange-200/20 dark:bg-orange-500/5 rounded-full blur-3xl -z-10" />
 
-        <div className="container mx-auto px-4 max-w-5xl py-16 md:py-24">
-          <div className="max-w-3xl mx-auto text-center animate-fade-in-up">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight leading-tight">
-              Tu entrenador de CrossFit{' '}
-              <span className="bg-linear-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
-                potenciado por IA
-              </span>
-            </h1>
-            <p className="mt-6 text-lg md:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
-              Genera WODs personalizados al instante basados en tu equipamiento, nivel y objetivos. Entrena donde sea, sin excusas, solo resultados.
-            </p>
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+        {/* Header */}
+        <header className="py-6">
+          <div className="container mx-auto px-4 max-w-5xl flex justify-between items-center">
+            <span className="flex items-center gap-2 text-xl font-semibold text-red-500">
+              <Image src="/apple-touch-icon.png" alt="" width={24} height={24} className="rounded-md" />
+              Forgia
+            </span>
+            <div className="flex items-center gap-4">
               <Link
-                href="/login"
-                className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-linear-to-r from-red-500 to-red-600 rounded-full hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900"
+                href="/blog"
+                className="text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors"
               >
-                Comenzar Gratis
-                <ArrowRight className="ml-2 w-5 h-5" />
+                Blog
               </Link>
-              <Link
-                href="#features"
-                className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-full border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-500 transition-all duration-300"
-              >
-                Saber más
-              </Link>
+              <ThemeToggle />
             </div>
-            <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-500">
-              No se requiere tarjeta de crédito para empezar.
-            </p>
           </div>
-        </div>
-      </section>
+        </header>
+
+        {/* Hero */}
+        <section className="grow flex items-center">
+          <div className="container mx-auto px-4 max-w-5xl py-16 md:py-24">
+            <div className="max-w-3xl mx-auto text-center animate-fade-in-up">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-neutral-900 dark:text-neutral-100 tracking-tight leading-tight">
+                Tu entrenador de CrossFit{' '}
+                <span className="bg-linear-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
+                  potenciado por IA
+                </span>
+              </h1>
+              <p className="mt-6 text-lg md:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
+                Genera WODs personalizados al instante basados en tu equipamiento, nivel y objetivos. Entrena donde sea, sin excusas, solo resultados.
+              </p>
+              <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/login"
+                  className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-white bg-linear-to-r from-red-500 to-red-600 rounded-full hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-neutral-900"
+                >
+                  Comenzar Gratis
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Link>
+                <Link
+                  href="#features"
+                  className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-full border-2 border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-500 transition-all duration-300"
+                >
+                  Saber más
+                </Link>
+              </div>
+              <p className="mt-4 text-sm text-neutral-500 dark:text-neutral-500">
+                No se requiere tarjeta de crédito para empezar.
+              </p>
+            </div>
+          </div>
+        </section>
+      </div>
 
       <section className="py-8 md:py-12 animate-fade-in-up">
         <div className="container mx-auto px-4 max-w-5xl">

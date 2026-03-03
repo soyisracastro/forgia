@@ -3,6 +3,7 @@ import type { MonthlyProgram } from '@/types/program';
 import type { WeeklyAnalysisResponse } from '@/types/weekly-analysis';
 import type { TrainingIntelligenceResponse } from '@/app/api/training-intelligence/route';
 import type { LevelAssessment, AssessmentSelfReport } from '@/types/assessment';
+import type { ChatHistoryEntry } from '@/types/chat';
 
 export async function generateProgram(): Promise<MonthlyProgram> {
   const response = await fetch('/api/generate-program', {
@@ -85,4 +86,41 @@ export async function completeAssessment(
     throw new Error(errorData.error || 'Error al completar evaluación');
   }
   return response.json();
+}
+
+export async function sendChatMessage(
+  message: string,
+  history: ChatHistoryEntry[],
+  wod: Wod | null,
+  signal?: AbortSignal
+): Promise<{ body: ReadableStream<Uint8Array>; remaining: number }> {
+  const response = await fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message,
+      history: history.slice(-6),
+      context: { wod },
+    }),
+    signal,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Error del servidor' }));
+    if (response.status === 429) {
+      throw new Error(errorData.error || 'Has alcanzado el límite diario de mensajes. Intenta de nuevo mañana.');
+    }
+    if (response.status === 503) {
+      throw new Error(errorData.error || 'El servicio de IA está temporalmente ocupado. Intenta de nuevo en unos segundos.');
+    }
+    throw new Error(errorData.error || 'No se pudo enviar tu mensaje. Intenta de nuevo.');
+  }
+
+  if (!response.body) {
+    throw new Error('No se recibió respuesta del servidor.');
+  }
+
+  const remaining = parseInt(response.headers.get('X-Chat-Remaining') ?? '20', 10);
+
+  return { body: response.body, remaining };
 }
