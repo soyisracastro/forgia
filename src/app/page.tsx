@@ -54,7 +54,8 @@ export default function LandingPage() {
       {/* Header */}
       <header className="py-6">
         <div className="container mx-auto px-4 max-w-5xl flex justify-between items-center">
-          <span className="text-xl font-semibold text-red-500">
+          <span className="flex items-center gap-2 text-xl font-semibold text-red-500">
+            <Image src="/apple-touch-icon.png" alt="" width={24} height={24} className="rounded-md" />
             Forgia
           </span>
           <div className="flex items-center gap-4">
