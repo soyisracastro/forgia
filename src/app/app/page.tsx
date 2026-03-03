@@ -14,6 +14,7 @@ import PrintWodButton from '@/components/PrintWodButton';
 import TrainingIntelligenceCard from '@/components/TrainingIntelligenceCard';
 import ProgramBanner from '@/components/ProgramBanner';
 import { trackWodGenerated, trackWodSaved, trackWorkoutStarted } from '@/lib/analytics';
+import { useChatContext } from '@/contexts/ChatContext';
 import { Zap, Dices, ClipboardCheck, Play, Bookmark, BookmarkCheck } from 'lucide-react';
 
 const LiveWorkoutOverlay = dynamic(() => import('@/components/live/LiveWorkoutOverlay'), { ssr: false });
@@ -36,6 +37,7 @@ const LOADING_PHRASES = [
 
 export default function AppPage() {
   const { user } = useAuth();
+  const { setCurrentWod } = useChatContext();
   const [wod, setWod] = useState<Wod | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingLatest, setIsLoadingLatest] = useState(true);
@@ -48,6 +50,11 @@ export default function AppPage() {
   const [showLiveMode, setShowLiveMode] = useState(false);
   const [liveWorkoutTime, setLiveWorkoutTime] = useState<number | null>(null);
   const [loadingPhraseIndex, setLoadingPhraseIndex] = useState(0);
+
+  // Sync WOD to ChatContext so Coach IA has context
+  useEffect(() => {
+    setCurrentWod(wod);
+  }, [wod, setCurrentWod]);
 
   // Load latest saved WOD from Supabase on mount
   useEffect(() => {

@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
 
-type RateLimitedAction = 'generate_wod' | 'generate_program' | 'weekly_analysis';
+type RateLimitedAction = 'generate_wod' | 'generate_program' | 'weekly_analysis' | 'chat';
 
 const DAILY_LIMITS: Record<RateLimitedAction, number> = {
   generate_wod: 5,
   generate_program: 2,
   weekly_analysis: 5,
+  chat: 20,
 };
 
 interface RateLimitResult {
@@ -20,6 +21,17 @@ export async function checkRateLimit(
 ): Promise<RateLimitResult> {
   const limit = DAILY_LIMITS[action];
   const supabase = await createClient();
+
+  // Admin bypass: unlimited usage
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single();
+
+  if (profile?.role === 'admin') {
+    return { allowed: true, remaining: 999, limit };
+  }
 
   const twentyFourHoursAgo = new Date();
   twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
