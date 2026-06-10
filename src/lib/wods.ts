@@ -71,6 +71,9 @@ export async function saveFeedback(userId: string, input: WorkoutFeedbackInput):
       total_time_minutes: input.total_time_minutes ?? null,
       rx_or_scaled: input.rx_or_scaled,
       notes: input.notes ?? null,
+      started_at: input.started_at ?? null,
+      ended_at: input.ended_at ?? null,
+      section_times: input.section_times ?? null,
     })
     .select()
     .single();

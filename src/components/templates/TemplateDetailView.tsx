@@ -162,9 +162,9 @@ export default function TemplateDetailView({ template, onBack }: TemplateDetailV
       {showLiveMode && (
         <LiveWorkoutOverlay
           wod={template.wod}
-          onFinish={(totalMinutes) => {
+          onFinish={(result) => {
             setShowLiveMode(false);
-            setLiveWorkoutTime(totalMinutes);
+            setLiveWorkoutTime(result.totalMinutes);
             setShowResultForm(true);
           }}
           onCancel={() => setShowLiveMode(false)}

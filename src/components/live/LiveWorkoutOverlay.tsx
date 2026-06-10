@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import type { Wod, WodSection } from '@/types/wod';
+import type { Wod, WodSection, WodSectionKey, SectionTimes } from '@/types/wod';
 import { useTimer, type TimerConfig, type TimerState } from '@/hooks/useTimer';
 import { useAudioCues } from '@/hooks/useAudioCues';
 import { useWakeLock } from '@/hooks/useWakeLock';
@@ -11,7 +11,7 @@ import LiveWorkoutSummary from './LiveWorkoutSummary';
 import { trackWorkoutCompleted } from '@/lib/analytics';
 import { X, Pause, Play, SkipForward, Flag, Volume2, VolumeX } from 'lucide-react';
 
-type SectionKey = 'warmUp' | 'strengthSkill' | 'metcon' | 'coolDown';
+type SectionKey = WodSectionKey;
 type WorkoutPhase = 'countdown' | SectionKey | 'summary';
 
 const SECTION_ORDER: SectionKey[] = ['warmUp', 'strengthSkill', 'metcon', 'coolDown'];
@@ -40,9 +40,18 @@ const SECTION_PILL_ACTIVE: Record<SectionKey, string> = {
 const SESSION_STORAGE_KEY = 'live-workout-state';
 const RECOVERY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
 
+export interface LiveWorkoutResult {
+  totalMinutes: number;
+  /** ISO 8601 — inicio real del entrenamiento (null si no se pudo capturar) */
+  startedAt: string | null;
+  /** ISO 8601 — fin real del entrenamiento */
+  endedAt: string;
+  sectionTimes: SectionTimes;
+}
+
 interface LiveWorkoutOverlayProps {
   wod: Wod;
-  onFinish: (totalMinutes: number) => void;
+  onFinish: (result: LiveWorkoutResult) => void;
   onCancel: () => void;
 }
 
@@ -304,7 +313,17 @@ const LiveWorkoutOverlay: React.FC<LiveWorkoutOverlayProps> = ({ wod, onFinish, 
     const totalMinutes = Math.round(totalTimeSeconds / 60 * 10) / 10;
     trackWorkoutCompleted(totalMinutes);
     sessionStorage.removeItem(SESSION_STORAGE_KEY);
-    onFinish(totalMinutes);
+    // El fin real es inicio + duración medida, no el momento en que el
+    // usuario cierra la pantalla de resumen
+    const endedAtMs = totalStartRef.current
+      ? totalStartRef.current + totalTimeSeconds * 1000
+      : Date.now();
+    onFinish({
+      totalMinutes,
+      startedAt: totalStartRef.current ? new Date(totalStartRef.current).toISOString() : null,
+      endedAt: new Date(endedAtMs).toISOString(),
+      sectionTimes,
+    });
   };
 
   const handleSummaryDiscard = () => {

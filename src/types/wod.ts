@@ -31,6 +31,11 @@ export interface SavedWod {
 
 export type RxOrScaled = 'Rx' | 'Scaled';
 
+export type WodSectionKey = 'warmUp' | 'strengthSkill' | 'metcon' | 'coolDown';
+
+/** Segundos reales por sección, medidos en el live mode */
+export type SectionTimes = Partial<Record<WodSectionKey, number>>;
+
 export interface WorkoutFeedback {
   id: string;
   user_id: string;
@@ -41,6 +46,9 @@ export interface WorkoutFeedback {
   rx_or_scaled: RxOrScaled;
   notes: string | null;
   gemini_analysis: GeminiAnalysis | null;
+  started_at: string | null;
+  ended_at: string | null;
+  section_times: SectionTimes | null;
   created_at: string;
 }
 
@@ -51,6 +59,9 @@ export interface WorkoutFeedbackInput {
   total_time_minutes?: number | null;
   rx_or_scaled: RxOrScaled;
   notes?: string | null;
+  started_at?: string | null;
+  ended_at?: string | null;
+  section_times?: SectionTimes | null;
 }
 
 export interface GeminiAnalysis {
