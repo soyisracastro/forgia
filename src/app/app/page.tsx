@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import type { Wod, WorkoutFeedback } from '@/types/wod';
+import type { LiveWorkoutResult } from '@/components/live/LiveWorkoutOverlay';
 import { generateWod } from '@/lib/gemini';
 import { saveWod, getLatestWod, bulkInsertWods } from '@/lib/wods';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,7 +49,7 @@ export default function AppPage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [savedFeedback, setSavedFeedback] = useState<WorkoutFeedback | null>(null);
   const [showLiveMode, setShowLiveMode] = useState(false);
-  const [liveWorkoutTime, setLiveWorkoutTime] = useState<number | null>(null);
+  const [liveSession, setLiveSession] = useState<LiveWorkoutResult | null>(null);
   const [loadingPhraseIndex, setLoadingPhraseIndex] = useState(0);
 
   // Sync WOD to ChatContext so Coach IA has context
@@ -128,7 +129,7 @@ export default function AppPage() {
     setSavedWodId(null);
     setShowFeedback(false);
     setSavedFeedback(null);
-    setLiveWorkoutTime(null);
+    setLiveSession(null);
 
     try {
       const newWod = await generateWod(
@@ -291,9 +292,9 @@ export default function AppPage() {
       {showLiveMode && wod && (
         <LiveWorkoutOverlay
           wod={wod}
-          onFinish={(totalMinutes) => {
+          onFinish={(result) => {
             setShowLiveMode(false);
-            setLiveWorkoutTime(totalMinutes);
+            setLiveSession(result);
             setShowFeedback(true);
             if (!savedWodId) handleSaveWod();
           }}
@@ -308,7 +309,8 @@ export default function AppPage() {
           userId={user.id}
           onSaved={handleFeedbackSaved}
           onClose={() => setShowFeedback(false)}
-          initialTotalTime={liveWorkoutTime}
+          initialTotalTime={liveSession?.totalMinutes ?? null}
+          session={liveSession}
         />
       )}
     </>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import type { Wod, WorkoutFeedback, WorkoutFeedbackInput, RxOrScaled } from '@/types/wod';
+import type { LiveWorkoutResult } from '@/components/live/LiveWorkoutOverlay';
 import { saveFeedback } from '@/lib/wods';
 import SegmentedButton from '@/components/ui/SegmentedButton';
 import { trackFeedbackSubmitted } from '@/lib/analytics';
@@ -14,6 +15,8 @@ interface WorkoutFeedbackFormProps {
   onSaved: (feedback: WorkoutFeedback) => void;
   onClose: () => void;
   initialTotalTime?: number | null;
+  /** Datos de la sesión en vivo (timestamps reales y tiempos por sección) */
+  session?: LiveWorkoutResult | null;
 }
 
 const difficultyLabels: Record<number, string> = {
@@ -35,7 +38,7 @@ const XIcon = () => (
   </svg>
 );
 
-export default function WorkoutFeedbackForm({ wod, wodId, userId, onSaved, onClose, initialTotalTime }: WorkoutFeedbackFormProps) {
+export default function WorkoutFeedbackForm({ wod, wodId, userId, onSaved, onClose, initialTotalTime, session }: WorkoutFeedbackFormProps) {
   const [difficulty, setDifficulty] = useState(5);
   const [totalTime, setTotalTime] = useState(initialTotalTime ? String(Math.round(initialTotalTime)) : '');
   const [rxOrScaled, setRxOrScaled] = useState<RxOrScaled>('Rx');
@@ -64,6 +67,12 @@ export default function WorkoutFeedbackForm({ wod, wodId, userId, onSaved, onClo
         total_time_minutes: totalTime ? parseInt(totalTime, 10) : null,
         rx_or_scaled: rxOrScaled,
         notes: notes.trim() || null,
+        started_at: session?.startedAt ?? null,
+        ended_at: session?.endedAt ?? null,
+        section_times:
+          session && Object.keys(session.sectionTimes).length > 0
+            ? session.sectionTimes
+            : null,
       };
 
       const saved = await saveFeedback(userId, input);

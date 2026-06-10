@@ -9,7 +9,7 @@ import type { OpenDivision, OpenGender } from '@/lib/open-workouts';
 import type { WorkoutFeedback } from '@/types/wod';
 import { saveWod } from '@/lib/wods';
 import WodDisplay from '@/components/WodDisplay';
-import LiveWorkoutOverlay from '@/components/live/LiveWorkoutOverlay';
+import LiveWorkoutOverlay, { type LiveWorkoutResult } from '@/components/live/LiveWorkoutOverlay';
 import WorkoutFeedbackForm from '@/components/WorkoutFeedbackForm';
 import CopyWodButton from '@/components/CopyWodButton';
 import PrintWodButton from '@/components/PrintWodButton';
@@ -34,7 +34,7 @@ export default function OpenPage() {
   const [showFeedback, setShowFeedback] = useState(false);
   const [savedWodId, setSavedWodId] = useState<string | null>(null);
   const [savedFeedback, setSavedFeedback] = useState<WorkoutFeedback | null>(null);
-  const [liveWorkoutTime, setLiveWorkoutTime] = useState<number | null>(null);
+  const [liveSession, setLiveSession] = useState<LiveWorkoutResult | null>(null);
 
   const wod = useMemo(() => buildOpenWod(division, gender), [division, gender]);
 
@@ -165,9 +165,9 @@ export default function OpenPage() {
       {showLiveMode && (
         <LiveWorkoutOverlay
           wod={wod}
-          onFinish={(totalMinutes) => {
+          onFinish={(result) => {
             setShowLiveMode(false);
-            setLiveWorkoutTime(totalMinutes);
+            setLiveSession(result);
             setShowFeedback(true);
             if (!savedWodId) handleSaveWod();
           }}
@@ -183,7 +183,8 @@ export default function OpenPage() {
           userId={user.id}
           onSaved={handleFeedbackSaved}
           onClose={() => setShowFeedback(false)}
-          initialTotalTime={liveWorkoutTime}
+          initialTotalTime={liveSession?.totalMinutes ?? null}
+          session={liveSession}
         />
       )}
     </>
