@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+import { requireUser } from '@/lib/api-auth';
+import { parseJsonBody } from '@/lib/api-validation';
+import { trackUsage } from '@/lib/rate-limit';
 import { getBenchmarkForLevel } from '@/lib/assessment-benchmarks';
 import type { ExperienceLevel } from '@/types/profile';
 
-export async function GET() {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+const createAssessmentBodySchema = z.object({
+  benchmarkId: z.string().min(1).max(100),
+});
 
-  if (authError || !user) {
-    return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
-  }
+export async function GET(request: NextRequest) {
+  const auth = await requireUser(request);
+  if (!auth.ok) return auth.response;
+  const { user, supabase } = auth;
 
   const { data, error } = await supabase
     .from('level_assessments')
@@ -26,19 +30,13 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const auth = await requireUser(request, { rateLimit: 'assessment' });
+  if (!auth.ok) return auth.response;
+  const { user, supabase } = auth;
 
-  if (authError || !user) {
-    return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
-  }
-
-  const body = await request.json();
-  const benchmarkId = body.benchmarkId;
-
-  if (typeof benchmarkId !== 'string' || benchmarkId.length === 0) {
-    return NextResponse.json({ error: 'Falta benchmarkId.' }, { status: 400 });
-  }
+  const parsed = await parseJsonBody(request, createAssessmentBodySchema);
+  if (!parsed.ok) return parsed.response;
+  const { benchmarkId } = parsed.data;
 
   // Get user's current level
   const { data: profile, error: profileError } = await supabase
@@ -74,6 +72,8 @@ export async function POST(request: NextRequest) {
     console.error('Error al crear evaluación:', error.message);
     return NextResponse.json({ error: 'Error al crear evaluación. Intenta de nuevo.' }, { status: 500 });
   }
+
+  await trackUsage(supabase, user.id, 'assessment');
 
   return NextResponse.json(data);
 }

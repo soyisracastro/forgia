@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
-import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit, trackUsage } from '@/lib/rate-limit';
+import { z } from 'zod';
+import { requireUser } from '@/lib/api-auth';
+import { parseJsonBody } from '@/lib/api-validation';
+import { trackUsage } from '@/lib/rate-limit';
 import type { Profile } from '@/types/profile';
 import { buildPeriodizationAnalysis, buildPeriodizationContext } from '@/lib/periodization';
 import type { WodRecord, FeedbackRecord as PeriodizationFeedbackRecord } from '@/lib/periodization';
 import type { ProgramWeek } from '@/types/program';
+
+const generateWodBodySchema = z.object({
+  sessionNotes: z.string().max(1000).optional(),
+});
 
 // --- Feedback context ---
 
@@ -350,25 +356,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Authenticate user
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json(
-      { error: 'No autorizado. Inicia sesión para generar un WOD.' },
-      { status: 401 }
-    );
-  }
-
-  // Rate limit check
-  const rateLimit = await checkRateLimit(user.id, 'generate_wod');
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      { error: 'Has alcanzado el límite diario de generación de WODs. Intenta de nuevo mañana.', remaining: 0, limit: rateLimit.limit },
-      { status: 429 }
-    );
-  }
+  // Authenticate user + rate limit
+  const auth = await requireUser(request, {
+    rateLimit: 'generate_wod',
+    authMessage: 'No autorizado. Inicia sesión para generar un WOD.',
+  });
+  if (!auth.ok) return auth.response;
+  const { user, supabase } = auth;
 
   // Fetch profile
   const { data: profile, error: profileError } = await supabase
@@ -385,13 +379,9 @@ export async function POST(request: NextRequest) {
   }
 
   // Parse optional session notes
-  let sessionNotes = '';
-  try {
-    const body = await request.json();
-    sessionNotes = body.sessionNotes?.trim() ?? '';
-  } catch {
-    // Empty body is fine
-  }
+  const parsed = await parseJsonBody(request, generateWodBodySchema);
+  if (!parsed.ok) return parsed.response;
+  const sessionNotes = parsed.data.sessionNotes?.trim() ?? '';
 
   // Load 28 days of feedback + WODs for periodization analysis
   const twentyEightDaysAgo = new Date();
@@ -554,7 +544,7 @@ export async function POST(request: NextRequest) {
     }
 
     const wodData = JSON.parse(jsonString);
-    await trackUsage(user.id, 'generate_wod');
+    await trackUsage(supabase, user.id, 'generate_wod');
     return NextResponse.json(wodData);
   } catch (error) {
     console.error('Error al generar el WOD:', error);

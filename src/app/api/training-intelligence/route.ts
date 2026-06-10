@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireUser } from '@/lib/api-auth';
 import {
   buildPeriodizationAnalysis,
   type WodRecord,
@@ -64,13 +64,10 @@ function buildResponse(analysis: PeriodizationAnalysis, totalWods: number): Trai
   };
 }
 
-export async function GET() {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
-  }
+export async function GET(request: NextRequest) {
+  const auth = await requireUser(request);
+  if (!auth.ok) return auth.response;
+  const { user, supabase } = auth;
 
   const twentyEightDaysAgo = new Date();
   twentyEightDaysAgo.setDate(twentyEightDaysAgo.getDate() - 28);

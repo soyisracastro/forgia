@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
-import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit, trackUsage } from '@/lib/rate-limit';
+import { requireUser } from '@/lib/api-auth';
+import { trackUsage } from '@/lib/rate-limit';
 import type { Profile } from '@/types/profile';
 import type { ProgramWeek } from '@/types/program';
 
@@ -78,7 +78,7 @@ const programSchema = {
   required: ['weeks'],
 };
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
       { error: 'Error de configuración del servidor: falta la clave de API.' },
@@ -86,24 +86,12 @@ export async function POST() {
     );
   }
 
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json(
-      { error: 'No autorizado. Inicia sesión.' },
-      { status: 401 }
-    );
-  }
-
-  // Rate limit check
-  const rateLimit = await checkRateLimit(user.id, 'generate_program');
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      { error: 'Has alcanzado el límite diario de generación de programas. Intenta de nuevo mañana.', remaining: 0, limit: rateLimit.limit },
-      { status: 429 }
-    );
-  }
+  const auth = await requireUser(request, {
+    rateLimit: 'generate_program',
+    authMessage: 'No autorizado. Inicia sesión.',
+  });
+  if (!auth.ok) return auth.response;
+  const { user, supabase } = auth;
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
@@ -170,7 +158,7 @@ export async function POST() {
       );
     }
 
-    await trackUsage(user.id, 'generate_program');
+    await trackUsage(supabase, user.id, 'generate_program');
     return NextResponse.json({
       id: saved.id,
       user_id: saved.user_id,
@@ -181,9 +169,8 @@ export async function POST() {
     });
   } catch (error) {
     console.error('Error al generar programa:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error desconocido.';
     return NextResponse.json(
-      { error: `No se pudo generar el programa: ${errorMessage}` },
+      { error: 'No se pudo generar el programa. Intenta de nuevo más tarde.' },
       { status: 500 }
     );
   }
