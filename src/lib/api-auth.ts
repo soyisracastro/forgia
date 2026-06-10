@@ -90,3 +90,16 @@ export async function requireUser(
 
   return { ok: true, user, supabase, rateLimit };
 }
+
+/**
+ * Headers estándar de rate limit para respuestas exitosas.
+ * `remaining` descuenta la petición en curso (checkRateLimit corre antes
+ * de que trackUsage registre el consumo).
+ */
+export function rateLimitHeaders(rateLimit: RateLimitResult | null): Record<string, string> {
+  if (!rateLimit) return {};
+  return {
+    'X-RateLimit-Limit': String(rateLimit.limit),
+    'X-RateLimit-Remaining': String(Math.max(0, rateLimit.remaining - 1)),
+  };
+}

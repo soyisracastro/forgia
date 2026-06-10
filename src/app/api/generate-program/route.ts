@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
-import { requireUser } from '@/lib/api-auth';
+import { requireUser, rateLimitHeaders } from '@/lib/api-auth';
 import { trackUsage } from '@/lib/rate-limit';
 import type { Profile } from '@/types/profile';
 import type { ProgramWeek } from '@/types/program';
@@ -159,14 +159,17 @@ export async function POST(request: NextRequest) {
     }
 
     await trackUsage(supabase, user.id, 'generate_program');
-    return NextResponse.json({
-      id: saved.id,
-      user_id: saved.user_id,
-      month: saved.month,
-      year: saved.year,
-      weeks,
-      created_at: saved.created_at,
-    });
+    return NextResponse.json(
+      {
+        id: saved.id,
+        user_id: saved.user_id,
+        month: saved.month,
+        year: saved.year,
+        weeks,
+        created_at: saved.created_at,
+      },
+      { headers: rateLimitHeaders(auth.rateLimit) }
+    );
   } catch (error) {
     console.error('Error al generar programa:', error);
     return NextResponse.json(

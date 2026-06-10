@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
-import { requireUser } from '@/lib/api-auth';
+import { requireUser, rateLimitHeaders } from '@/lib/api-auth';
 import { trackUsage } from '@/lib/rate-limit';
 import type { Profile } from '@/types/profile';
 import type { WeeklyAnalysisResponse } from '@/types/weekly-analysis';
@@ -143,10 +143,10 @@ export async function GET(request: NextRequest) {
     const analysis = JSON.parse(jsonString);
 
     await trackUsage(supabase, user.id, 'weekly_analysis');
-    return NextResponse.json({
-      feedbackCount: feedbackRecords.length,
-      analysis,
-    });
+    return NextResponse.json(
+      { feedbackCount: feedbackRecords.length, analysis },
+      { headers: rateLimitHeaders(auth.rateLimit) }
+    );
   } catch (error) {
     console.error('Error al generar análisis semanal:', error);
     return NextResponse.json({ feedbackCount: feedbackRecords.length, analysis: null });

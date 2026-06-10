@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { z } from 'zod';
-import { requireUser } from '@/lib/api-auth';
+import { requireUser, rateLimitHeaders } from '@/lib/api-auth';
 import { parseJsonBody } from '@/lib/api-validation';
 import { trackUsage } from '@/lib/rate-limit';
 import type { Profile } from '@/types/profile';
@@ -301,7 +301,9 @@ export async function POST(request: NextRequest) {
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
           'Cache-Control': 'no-cache',
+          // X-Chat-Remaining se conserva por compatibilidad con el cliente web
           'X-Chat-Remaining': String(Math.max(0, rateLimit.remaining - 1)),
+          ...rateLimitHeaders(rateLimit),
         },
       });
     } catch (error) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireUser } from '@/lib/api-auth';
+import { requireUser, rateLimitHeaders } from '@/lib/api-auth';
 import { parseJsonBody } from '@/lib/api-validation';
 import { trackUsage } from '@/lib/rate-limit';
 import { getBenchmarkForLevel } from '@/lib/assessment-benchmarks';
@@ -75,5 +75,5 @@ export async function POST(request: NextRequest) {
 
   await trackUsage(supabase, user.id, 'assessment');
 
-  return NextResponse.json(data);
+  return NextResponse.json(data, { headers: rateLimitHeaders(auth.rateLimit) });
 }
