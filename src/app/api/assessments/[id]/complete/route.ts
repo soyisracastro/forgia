@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { requireUser } from '@/lib/api-auth';
+import { requireUser, rateLimitHeaders } from '@/lib/api-auth';
 import { parseJsonBody } from '@/lib/api-validation';
 import type { AssessmentSelfReport } from '@/types/assessment';
 
@@ -113,5 +113,8 @@ export async function POST(
     levelChanged = !profileError;
   }
 
-  return NextResponse.json({ assessment: updated, levelChanged });
+  return NextResponse.json(
+    { assessment: updated, levelChanged },
+    { headers: rateLimitHeaders(auth.rateLimit) }
+  );
 }

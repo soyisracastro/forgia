@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
 import { z } from 'zod';
-import { requireUser } from '@/lib/api-auth';
+import { requireUser, rateLimitHeaders } from '@/lib/api-auth';
 import { parseJsonBody } from '@/lib/api-validation';
 import { trackUsage } from '@/lib/rate-limit';
 import type { Profile } from '@/types/profile';
@@ -545,7 +545,7 @@ export async function POST(request: NextRequest) {
 
     const wodData = JSON.parse(jsonString);
     await trackUsage(supabase, user.id, 'generate_wod');
-    return NextResponse.json(wodData);
+    return NextResponse.json(wodData, { headers: rateLimitHeaders(auth.rateLimit) });
   } catch (error) {
     console.error('Error al generar el WOD:', error);
     return NextResponse.json(
