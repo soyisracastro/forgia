@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI, Type } from '@google/genai';
-import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit, trackUsage } from '@/lib/rate-limit';
+import { requireUser } from '@/lib/api-auth';
+import { trackUsage } from '@/lib/rate-limit';
 import type { Profile } from '@/types/profile';
 import type { WeeklyAnalysisResponse } from '@/types/weekly-analysis';
 
@@ -86,7 +86,7 @@ const weeklyAnalysisSchema = {
   required: ['resumen_semanal', 'logros', 'tendencias', 'areas_atencion', 'recomendaciones_proxima_semana', 'carga_percibida', 'nota_motivacional'],
 };
 
-export async function GET(): Promise<NextResponse<WeeklyAnalysisResponse>> {
+export async function GET(request: NextRequest) {
   if (!process.env.GEMINI_API_KEY) {
     return NextResponse.json(
       { feedbackCount: 0, analysis: null, error: 'Falta la clave de API.' } as unknown as WeeklyAnalysisResponse,
@@ -94,24 +94,9 @@ export async function GET(): Promise<NextResponse<WeeklyAnalysisResponse>> {
     );
   }
 
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json(
-      { feedbackCount: 0, analysis: null } as WeeklyAnalysisResponse,
-      { status: 401 }
-    );
-  }
-
-  // Rate limit check
-  const rateLimit = await checkRateLimit(user.id, 'weekly_analysis');
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      { feedbackCount: 0, analysis: null, error: 'Límite diario de análisis alcanzado.' } as unknown as WeeklyAnalysisResponse,
-      { status: 429 }
-    );
-  }
+  const auth = await requireUser(request, { rateLimit: 'weekly_analysis' });
+  if (!auth.ok) return auth.response;
+  const { user, supabase } = auth;
 
   const weekStart = getWeekStart();
 
@@ -157,7 +142,7 @@ export async function GET(): Promise<NextResponse<WeeklyAnalysisResponse>> {
 
     const analysis = JSON.parse(jsonString);
 
-    await trackUsage(user.id, 'weekly_analysis');
+    await trackUsage(supabase, user.id, 'weekly_analysis');
     return NextResponse.json({
       feedbackCount: feedbackRecords.length,
       analysis,

@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+import { requireUser } from '@/lib/api-auth';
+import { parseJsonBody } from '@/lib/api-validation';
 import type { AssessmentSelfReport } from '@/types/assessment';
+
+const completeAssessmentBodySchema = z.object({
+  selfReport: z.object({
+    completed: z.boolean(),
+    total_time_minutes: z.number().min(0).max(600).nullable().optional(),
+    rounds_or_reps: z.string().max(100).nullable().optional(),
+    rx_or_scaled: z.enum(['Rx', 'Scaled']),
+    notes: z.string().max(500).nullable().optional(),
+  }),
+});
 
 function evaluateResult(benchmarkId: string, report: AssessmentSelfReport): boolean {
   if (!report.completed) return false;
@@ -31,12 +43,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
-  }
+  const auth = await requireUser(request, { rateLimit: 'assessment' });
+  if (!auth.ok) return auth.response;
+  const { user, supabase } = auth;
 
   const { id } = await params;
 
@@ -56,23 +65,18 @@ export async function POST(
     return NextResponse.json({ error: 'Esta evaluación ya fue completada.' }, { status: 400 });
   }
 
-  const body = await request.json();
-  const selfReport = body.selfReport;
-
-  if (
-    !selfReport ||
-    typeof selfReport.completed !== 'boolean' ||
-    !['Rx', 'Scaled'].includes(selfReport.rx_or_scaled)
-  ) {
+  const parsed = await parseJsonBody(request, completeAssessmentBodySchema);
+  if (!parsed.ok) {
     return NextResponse.json({ error: 'Datos de reporte inválidos.' }, { status: 400 });
   }
+  const { selfReport } = parsed.data;
 
   const validatedReport: AssessmentSelfReport = {
     completed: selfReport.completed,
-    total_time_minutes: typeof selfReport.total_time_minutes === 'number' ? selfReport.total_time_minutes : null,
-    rounds_or_reps: typeof selfReport.rounds_or_reps === 'string' ? selfReport.rounds_or_reps.slice(0, 100) : null,
+    total_time_minutes: selfReport.total_time_minutes ?? null,
+    rounds_or_reps: selfReport.rounds_or_reps ?? null,
     rx_or_scaled: selfReport.rx_or_scaled,
-    notes: typeof selfReport.notes === 'string' ? selfReport.notes.slice(0, 500) : null,
+    notes: selfReport.notes ?? null,
   };
 
   const passed = evaluateResult(assessment.benchmark_id, validatedReport);

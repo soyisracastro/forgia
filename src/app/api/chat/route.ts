@@ -1,11 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
-import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit, trackUsage } from '@/lib/rate-limit';
+import { z } from 'zod';
+import { requireUser } from '@/lib/api-auth';
+import { parseJsonBody } from '@/lib/api-validation';
+import { trackUsage } from '@/lib/rate-limit';
 import type { Profile } from '@/types/profile';
 import type { Wod } from '@/types/wod';
 import type { ChatHistoryEntry } from '@/types/chat';
 import type { ProgramWeek } from '@/types/program';
+
+const chatBodySchema = z.object({
+  message: z.string().trim().min(1).max(2000),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string().max(4000),
+      })
+    )
+    .max(20)
+    .optional(),
+  context: z
+    .object({ wod: z.unknown().optional() })
+    .nullish(),
+});
 
 // --- Feedback summary for chat context ---
 
@@ -157,53 +175,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Authenticate
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  // Authenticate + rate limit
+  const auth = await requireUser(request, {
+    rateLimit: 'chat',
+    authMessage: 'No autorizado. Inicia sesión para usar el Coach IA.',
+  });
+  if (!auth.ok) return auth.response;
+  const { user, supabase } = auth;
+  const rateLimit = auth.rateLimit!;
 
-  if (authError || !user) {
-    return NextResponse.json(
-      { error: 'No autorizado. Inicia sesión para usar el Coach IA.' },
-      { status: 401 }
-    );
-  }
+  // Parse + validate request body
+  const parsed = await parseJsonBody(request, chatBodySchema);
+  if (!parsed.ok) return parsed.response;
 
-  // Rate limit
-  const rateLimit = await checkRateLimit(user.id, 'chat');
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      {
-        error: 'Has alcanzado el límite diario de mensajes del Coach IA. Intenta de nuevo mañana.',
-        remaining: 0,
-        limit: rateLimit.limit,
-      },
-      { status: 429 }
-    );
-  }
-
-  // Parse request body
-  let message = '';
-  let history: ChatHistoryEntry[] = [];
-  let wod: Wod | null = null;
-
-  try {
-    const body = await request.json();
-    message = body.message?.trim() ?? '';
-    history = Array.isArray(body.history) ? body.history.slice(-6) : [];
-    wod = body.context?.wod ?? null;
-  } catch {
-    return NextResponse.json(
-      { error: 'Solicitud inválida.' },
-      { status: 400 }
-    );
-  }
-
-  if (!message) {
-    return NextResponse.json(
-      { error: 'El mensaje no puede estar vacío.' },
-      { status: 400 }
-    );
-  }
+  const message = parsed.data.message;
+  const history: ChatHistoryEntry[] = (parsed.data.history ?? []).slice(-6);
+  const wod = (parsed.data.context?.wod ?? null) as Wod | null;
 
   // Sanitize user message
   const sanitizedMessage = message.slice(0, 500).replace(/[<>{}]/g, '');
@@ -308,7 +295,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Track usage after starting the stream (fire-and-forget)
-      trackUsage(user.id, 'chat').catch(() => {});
+      trackUsage(supabase, user.id, 'chat').catch(() => {});
 
       return new Response(readableStream, {
         headers: {

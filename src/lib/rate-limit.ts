@@ -1,26 +1,32 @@
-import { createClient } from '@/lib/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
-type RateLimitedAction = 'generate_wod' | 'generate_program' | 'weekly_analysis' | 'chat';
+export type RateLimitedAction =
+  | 'generate_wod'
+  | 'generate_program'
+  | 'weekly_analysis'
+  | 'chat'
+  | 'assessment';
 
 const DAILY_LIMITS: Record<RateLimitedAction, number> = {
   generate_wod: 5,
   generate_program: 2,
   weekly_analysis: 5,
   chat: 20,
+  assessment: 10,
 };
 
-interface RateLimitResult {
+export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   limit: number;
 }
 
 export async function checkRateLimit(
+  supabase: SupabaseClient,
   userId: string,
   action: RateLimitedAction
 ): Promise<RateLimitResult> {
   const limit = DAILY_LIMITS[action];
-  const supabase = await createClient();
 
   // Admin bypass: unlimited usage
   const { data: profile } = await supabase
@@ -60,11 +66,10 @@ export async function checkRateLimit(
 }
 
 export async function trackUsage(
+  supabase: SupabaseClient,
   userId: string,
   action: RateLimitedAction
 ): Promise<void> {
-  const supabase = await createClient();
-
   const { error } = await supabase
     .from('usage_tracking')
     .insert({ user_id: userId, action });
